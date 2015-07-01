@@ -1,0 +1,16 @@
+*.tlog
+*.lastbuildstate
+*.obj
+*.sdf
+*.ipch
+*.lib
+*.pdb
+ReadMe.txt
+*.log
+*.idb
+*.pch
+*.suo
+*.opensdf
+*.exe
+*.ilk
+*.asm

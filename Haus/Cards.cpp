@@ -26,10 +26,12 @@ void Deck::Shuffle()
 	const int ccrds = (int)Suit::suitLim * (int)Value::valLim;
 	int iposSwap;
 
+	ASSERT(ccrds == _veccrd.size());
+
 	for (int ipos = 0; ipos < ccrds; ipos++)
 	{
 		iposSwap = ipos + rand() % (ccrds - ipos);
-		ASSERT(iposSwap > ipos  && iposSwap <= ccrds);
+		ASSERT(iposSwap >= ipos  && iposSwap <= ccrds);
 		Card& crdT = _veccrd[ipos];
 		Card& crdSwap = _veccrd[iposSwap];
 
@@ -49,7 +51,7 @@ Card Deck::Deal()
 
 void Deck::Reset()
 {
-	_veccrd.empty();
+	_veccrd.clear();
 
 	for (int suit = (int)Suit::suitFirst; suit < (int)Suit::suitLim; suit++)
 	{
@@ -58,6 +60,4 @@ void Deck::Reset()
 			_veccrd.push_back(Card((Suit)suit, (Value)val));
 		}
 	}
-
-	Shuffle();
 }

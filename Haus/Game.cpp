@@ -18,11 +18,13 @@ Game::Game()
 	}
 }
 
+
 Game::~Game()
 {
 	for (int i = 0; i < 4; i++)
 		delete pl[i];
 }
+
 
 void Game::Play()
 {
@@ -31,6 +33,18 @@ void Game::Play()
 		DoRound();
 	} while (FWinnerExists());
 	DisplayWinner();
+}
+
+
+void Game::DealCards()
+{
+	for (int i = 0; i < ccrdsPerPl * cpl; i++)
+	{
+		int ipos = (i + posplDealer + 1) % cpl;
+		ASSERT(ipos >= 0 && ipos < cpl);
+		ASSERTIMPLIES(i == (cpl-1), ipos == posplDealer);
+		pl[ipos]->TakeCard(_dck.Deal());
+	}
 }
 
 
@@ -43,6 +57,7 @@ bool Game::FWinnerExists()
 	}
 	return false;
 }
+
 
 void Game::DisplayWinner()
 {
@@ -60,6 +75,7 @@ void Game::DisplayWinner()
 		}
 	}
 }
+
 
 void Game::DoBet()
 {
@@ -86,13 +102,18 @@ void Game::DoBet()
 	pl[iposCurHighBidder]->ForceBet(bcCurHighestBid, fForcedToTake);
 }
 
+
 void Game::DoRound()
 {
+	_dck.Reset();
+	_dck.Shuffle();
+	DealCards();
 	DoBet();
 	PlayTricks();
 	DoScoring();
 	posplDealer++;
 }
+
 
 void Game::PlayTricks()
 {
@@ -100,10 +121,12 @@ void Game::PlayTricks()
 	NOTREACHED();
 }
 
+
 void Game::DoScoring()
 {
 	for (int i = 0; i < 4; i++)
 		pl[i]->DoScoring();
 }
+
 
 void Game::DetermineWinner(){}

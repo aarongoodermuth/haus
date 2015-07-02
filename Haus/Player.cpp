@@ -19,12 +19,18 @@ void Player::ResetRound()
 	_cTricksWon = 0;
 	_bc = BetChoice::PASS;
 	_fForcedToBet = false;
+	_veccrdHand.clear();
 }
 
 void Player::ForceBet(BetChoice bc, bool fForcedToBet)
 {
 	_bc = bc;
 	_fForcedToBet = fForcedToBet;
+}
+
+void Player::TakeCard(Card &crd)
+{
+	_veccrdHand.push_back(crd);
 }
 
 void Player::DoScoring()

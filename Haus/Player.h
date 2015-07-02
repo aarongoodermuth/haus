@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include "Cards.h"
 
 using namespace std;
 
@@ -9,8 +11,9 @@ enum BetChoice // bc
 	bcNil = -1,
 	bcFirst = 0,
 	PASS = 0,
+	THREE,
+	DEFAULT_DEALER = THREE,
 	FOUR,
-	DEFAULT_DEALER = FOUR,
 	FIVE,
 	SIX,
 	TWELVE,
@@ -36,6 +39,7 @@ public:
 	void ResetRound();
 	virtual BetChoice BcRequestDesiredBet() = 0;
 	void ForceBet(BetChoice, bool fForcedToBet);
+	void TakeCard(Card &crd);
 	void DoScoring();
 	bool FIsWinner();
 
@@ -55,6 +59,7 @@ protected:
 	int _nScore;
 	bool _fForcedToBet;
 	string _strName;
+	vector<Card> _veccrdHand;
 
 	static const int c_cBetChoices = (int)BetChoice::cbc;
 	static const BetChoiceInfo c_rgbci[c_cBetChoices];

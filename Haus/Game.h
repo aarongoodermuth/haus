@@ -1,7 +1,9 @@
 #pragma once
+#include <vector>
 
 #include "Cards.h"
 #include "Player.h"
+#include "Round.h"
 
 class Game
 {
@@ -11,19 +13,15 @@ public:
 
 	void Play();
 
-private:
+	// TODO : Make these both part of a rules class
 	static const int cpl = 4;
 	static const int ccrdsPerPl = 6;
 
-	Player *pl[cpl];
-	Deck _dck;
-	int posplDealer;
+private:
+	vector<Player*> _vecppl;
+	int _iposplDealer;
 
-	void DealCards();
-	void DoBet();
 	void DoRound();
-	void PlayTricks();
-	void DoScoring();
 	bool FWinnerExists();
 	void DetermineWinner();
 	void DisplayWinner();

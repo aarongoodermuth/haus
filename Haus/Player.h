@@ -39,6 +39,9 @@ public:
 	void DoScoring();
 	bool FIsWinner();
 
+	// quick and dirty
+	inline void TakeTrick(){ _cTricksWon++; }
+
 	// Getters
 	inline int NScore(){ return _nScore; }
 	inline string StrName() { return _strName; }

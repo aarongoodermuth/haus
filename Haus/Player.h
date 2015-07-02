@@ -44,6 +44,8 @@ public:
 	inline string StrName() { return _strName; }
 
 protected:
+	void Init();
+
 	int _cTricksWon;
 	BetChoice _bc;
 	int _cBumps;

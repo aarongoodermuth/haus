@@ -17,7 +17,7 @@ const BetChoiceInfo Player::c_rgbci[Player::c_cBetChoices] =
 void Player::ResetRound()
 {
 	_cTricksWon = 0;
-	_bc = BetChoice::bcNil;
+	_bc = BetChoice::PASS;
 	_fForcedToBet = false;
 }
 
@@ -52,6 +52,14 @@ bool Player::FIsWinner()
 	return _nScore > 31; // TODO: refactor: duh!
 }
 
+void Player::Init()
+{
+	_nScore = 0;
+	_cTricksWon = 0;
+	_cBumps = 0;
+	ResetRound();
+}
+
 
 /*********************/
 /*  C O M P U T E R  */
@@ -59,7 +67,7 @@ bool Player::FIsWinner()
 Computer::Computer(int iPos)
 {
 	_strName = c_rgstrNames[iPos];
-	ResetRound();
+	Init();
 }
 
 BetChoice Computer::BcRequestDesiredBet()
@@ -74,7 +82,7 @@ BetChoice Computer::BcRequestDesiredBet()
 User::User()
 {
 	_strName = "You";
-	ResetRound();
+	Init();
 }
 
 BetChoice User::BcRequestDesiredBet()

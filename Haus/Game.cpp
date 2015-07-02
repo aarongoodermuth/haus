@@ -69,6 +69,7 @@ void Game::DisplayWinner()
 void Game::DoRound()
 {
 	Round rnd(_vecppl, _iposplDealer);
+	rnd.Do();
 	_iposplDealer++;
 }
 

@@ -32,8 +32,8 @@ void Deck::Shuffle()
 	{
 		iposSwap = ipos + rand() % (ccrds - ipos);
 		ASSERT(iposSwap >= ipos  && iposSwap <= ccrds);
-		Card& crdT = _veccrd[ipos];
-		Card& crdSwap = _veccrd[iposSwap];
+		Card crdT = _veccrd[ipos];
+		Card crdSwap = _veccrd[iposSwap];
 
 		_veccrd[ipos] = crdSwap;
 		_veccrd[iposSwap] = crdT;

@@ -12,6 +12,13 @@ Card::Card(Suit suitT, Value valT)
 }
 
 
+Card::Card()
+{
+	suit = Suit::suitLim;
+	val = Value::valLim;
+}
+
+
 /*************/
 /*  D E C K  */
 /*************/

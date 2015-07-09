@@ -13,10 +13,6 @@ public:
 
 	void Play();
 
-	// TODO : Make these both part of a rules class
-	static const int cpl = 4;
-	static const int ccrdsPerPl = 6;
-
 private:
 	vector<Player*> _vecppl;
 	int _iposplDealer;

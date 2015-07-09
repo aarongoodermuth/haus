@@ -69,6 +69,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="proc.cpp" />
     <ClCompile Include="Round.cpp" />
+    <ClCompile Include="Rules.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cards.h" />
@@ -76,6 +77,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Round.h" />
+    <ClInclude Include="Rules.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

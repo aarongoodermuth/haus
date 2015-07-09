@@ -1,14 +1,16 @@
 #include "Player.h"
+
 #include "Debug.h"
+#include "Rules.h"
 
 const string Computer::c_rgstrNames[4] = { "Bender", "Karen", "Jarvis", "HAL" };
 const BetChoiceInfo Player::c_rgbci[Player::c_cBetChoices] =
 {
 	{ BetChoice::PASS, 0 /*nBetAmount*/, 0 /*nRequredTricks*/, "pass" },
 	{ BetChoice::FOUR, 4 /*nBetAmount*/, 4 /*nRequredTricks*/, "four" },
-	{ BetChoice::PASS, 5 /*nBetAmount*/, 5 /*nRequredTricks*/, "five" },
-	{ BetChoice::PASS, 6 /*nBetAmount*/, 6 /*nRequredTricks*/, "six" },
-	{ BetChoice::PASS, 12 /*nBetAmount*/, 6 /*nRequredTricks*/, "haus" }
+	{ BetChoice::FIVE, 5 /*nBetAmount*/, 5 /*nRequredTricks*/, "five" },
+	{ BetChoice::SIX, 6 /*nBetAmount*/, 6 /*nRequredTricks*/, "six" },
+	{ BetChoice::TWELVE, 12 /*nBetAmount*/, 6 /*nRequredTricks*/, "haus" }
 };
 
 /*****************/
@@ -55,7 +57,7 @@ void Player::DoScoring()
 
 bool Player::FIsWinner()
 {
-	return _nScore > 31; // TODO: refactor: duh!
+	return _nScore >= 31; // TODO: refactor: duh!
 }
 
 void Player::Init()
@@ -78,7 +80,31 @@ Computer::Computer(int iPos)
 
 BetChoice Computer::BcRequestDesiredBet()
 {
+	// TODO
+	return BetChoice::PASS; //temp
 	return static_cast<BetChoice>(rand() % BetChoice::cbc);
+}
+
+
+Card Computer::CrdPlay(Card* pcrdLead)
+{
+	// TODO
+	int iposcrd = -1;
+	Card crdRet;
+	do
+	{
+		crdRet = _veccrdHand[++iposcrd];
+	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead));
+	_veccrdHand.erase(_veccrdHand.begin() + iposcrd);
+	return crdRet;
+}
+
+
+Suit Computer::SuitChooseTrump()
+{
+	// TODO
+	int iposcrd = 0;
+	return _veccrdHand[iposcrd].suit;
 }
 
 
@@ -112,4 +138,25 @@ BetChoice User::BcRequestDesiredBet()
 	}
 	}
 	}*/
+}
+
+Card User::CrdPlay(Card* pcrdLead)
+{
+	// TODO
+	int iposcrd = -1;
+	Card crdRet;
+	do
+	{
+		crdRet = _veccrdHand[++iposcrd];
+	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead));
+	_veccrdHand.erase(_veccrdHand.begin() + iposcrd);
+	return crdRet;
+}
+
+
+Suit User::SuitChooseTrump()
+{
+	// TODO
+	int iposcrd = 0;
+	return _veccrdHand[iposcrd].suit;
 }

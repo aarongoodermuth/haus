@@ -30,6 +30,7 @@ enum class Value
 struct Card
 {
 	Card(Suit suitT, Value valT);
+	Card::Card();
 	Suit suit;
 	Value val;
 };

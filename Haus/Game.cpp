@@ -2,6 +2,7 @@
 #include <iostream>
 #include "Debug.h"
 #include "Player.h"
+#include "Rules.h"
 
 using namespace std;
 
@@ -20,7 +21,8 @@ Game::Game()
 
 Game::~Game()
 {
-	for (int i = 0; i < _vecppl.size(); i++)
+	ASSERT(_vecppl.size() == Rules::cpl);
+	for (int i = 0; i < Rules::cpl; i++)
 	{
 		delete _vecppl[i];
 	}
@@ -32,7 +34,7 @@ void Game::Play()
 	do
 	{
 		DoRound();
-	} while (FWinnerExists());
+	} while (!FWinnerExists());
 	DisplayWinner();
 }
 
@@ -71,6 +73,7 @@ void Game::DoRound()
 	Round rnd(_vecppl, _iposplDealer);
 	rnd.Do();
 	_iposplDealer++;
+	_iposplDealer = _iposplDealer % Rules::cpl;
 }
 
 

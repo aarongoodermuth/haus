@@ -16,6 +16,7 @@ private:
 	vector<Player*> _vecppl;
 	Deck _dck;
 	int _iposplDealer;
+	int _iposplStartTrick;
 
 	void DealCards();
 	void DoBet();

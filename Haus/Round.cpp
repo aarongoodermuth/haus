@@ -1,8 +1,10 @@
 #include "Round.h"
 
 #include <vector>
+#include "Cards.h"
 #include "Debug.h"
 #include "Game.h"
+#include "Rules.h"
 
 using namespace std;
 
@@ -26,11 +28,11 @@ void Round::Do()
 
 void Round::DealCards()
 {
-	for (int i = 0; i < Game::ccrdsPerPl * Game::cpl; i++)
+	for (int i = 0; i < Rules::ccrdsPerPl * Rules::cpl; i++)
 	{
-		int ipos = (i + _iposplDealer + 1) % Game::cpl;
-		ASSERT(ipos >= 0 && ipos < Game::cpl);
-		ASSERTIMPLIES(i == (Game::cpl - 1), ipos == _iposplDealer);
+		int ipos = (i + _iposplDealer + 1) % Rules::cpl;
+		ASSERT(ipos >= 0 && ipos < Rules::cpl);
+		ASSERTIMPLIES(i == (Rules::cpl - 1), ipos == _iposplDealer);
 		_vecppl[ipos]->TakeCard(_dck.Deal());
 	}
 }
@@ -44,10 +46,10 @@ void Round::DoBet()
 	int ipos;
 	bool fForcedToTake = true;
 
-	for (int i = 0; i < Game::cpl; i++)
+	for (int i = 0; i < Rules::cpl; i++)
 	{
-		ipos = (i + _iposplDealer) % Game::cpl;
-		ASSERT(ipos < Game::cpl && ipos >= 0);
+		ipos = (i + _iposplDealer) % Rules::cpl;
+		ASSERT(ipos < Rules::cpl && ipos >= 0);
 		bcCurBet = _vecppl[ipos]->BcRequestDesiredBet();
 		if (bcCurBet > bcCurHighestBid)
 		{
@@ -59,13 +61,34 @@ void Round::DoBet()
 
 	// now we know who will have to bet
 	_vecppl[iposCurHighBidder]->ForceBet(bcCurHighestBid, fForcedToTake);
+	_iposplStartTrick = iposCurHighBidder;
 }
 
 
 void Round::PlayTricks()
 {
-	// TODO
-	NOTREACHED();
+	Suit suitTrump = _vecppl[_iposplDealer]->SuitChooseTrump();
+
+	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
+	{
+		int iposplHighestCard = _iposplStartTrick;
+		Card crdLead = _vecppl[_iposplStartTrick]->CrdPlay(NULL);
+		Card crdHighest = crdLead;
+		for (int i = 1; i < Rules::cpl; i++)
+		{
+			int ipospl = (_iposplStartTrick + i) % Rules::cpl;
+			ASSERT(ipospl >= 0 && ipospl < Rules::cpl);
+			Card crdPlayed = _vecppl[ipospl]->CrdPlay(&crdLead);
+
+			if (Rules::CardComparer::FGreaterThan(crdPlayed, crdHighest, suitTrump))
+			{
+				crdHighest = crdPlayed;
+				iposplHighestCard = ipospl;
+			}
+		}
+		_vecppl[iposplHighestCard]->TakeTrick();
+		_iposplStartTrick = iposplHighestCard;
+	}
 }
 
 

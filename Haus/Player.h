@@ -38,6 +38,8 @@ class Player
 public:
 	void ResetRound();
 	virtual BetChoice BcRequestDesiredBet() = 0;
+	virtual Card CrdPlay(Card* pcrdLead) = 0;
+	virtual Suit SuitChooseTrump() = 0;
 	void ForceBet(BetChoice, bool fForcedToBet);
 	void TakeCard(Card &crd);
 	void DoScoring();
@@ -75,6 +77,8 @@ public:
 	Computer(int iPos);
 
 	BetChoice BcRequestDesiredBet() override;
+	Card CrdPlay(Card* pcrdLead) override;
+	Suit SuitChooseTrump() override;
 	
 private: 
 	static const string c_rgstrNames[4];
@@ -90,4 +94,6 @@ public:
 	User();
 
 	BetChoice BcRequestDesiredBet() override;
+	Card CrdPlay(Card* pcrdLead) override;
+	Suit SuitChooseTrump() override;
 };

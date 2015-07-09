@@ -14,6 +14,8 @@ public:
 
 private:
 	vector<Player*> _vecppl;
+	vector<Card> _veccrdPlayed;
+	vector<Card> _veccrdPlayedThisTurn;
 	Deck _dck;
 	int _iposplDealer;
 	int _iposplStartTrick;

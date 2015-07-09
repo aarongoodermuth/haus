@@ -79,6 +79,8 @@ void Round::PlayTricks()
 			int ipospl = (_iposplStartTrick + i) % Rules::cpl;
 			ASSERT(ipospl >= 0 && ipospl < Rules::cpl);
 			Card crdPlayed = _vecppl[ipospl]->CrdPlay(&crdLead);
+			_veccrdPlayedThisTurn.push_back(crdPlayed);
+			_veccrdPlayed.push_back(crdPlayed);
 
 			if (Rules::CardComparer::FGreaterThan(crdPlayed, crdHighest, suitTrump))
 			{
@@ -88,6 +90,8 @@ void Round::PlayTricks()
 		}
 		_vecppl[iposplHighestCard]->TakeTrick();
 		_iposplStartTrick = iposplHighestCard;
+
+		_veccrdPlayedThisTurn.clear();
 	}
 }
 

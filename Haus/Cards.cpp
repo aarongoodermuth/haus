@@ -1,4 +1,7 @@
 #include "Cards.h"
+
+#include <cstdlib>
+
 #include "Debug.h"
 
 

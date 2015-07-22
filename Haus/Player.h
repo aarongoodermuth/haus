@@ -41,7 +41,7 @@ public:
 	virtual Card CrdPlay(Card* pcrdLead) = 0;
 	virtual Suit SuitChooseTrump() = 0;
 	void ForceBet(BetChoice, bool fForcedToBet);
-	void TakeCard(Card &crd);
+	void TakeCard(const Card &crd);
 	void DoScoring();
 	bool FIsWinner();
 
@@ -63,7 +63,7 @@ protected:
 	string _strName;
 	vector<Card> _veccrdHand;
 
-	static const int c_cBetChoices = (int)BetChoice::cbc;
+	static constexpr int c_cBetChoices = (int)BetChoice::cbc;
 	static const BetChoiceInfo c_rgbci[c_cBetChoices];
 };
 
@@ -79,8 +79,8 @@ public:
 	BetChoice BcRequestDesiredBet() override;
 	Card CrdPlay(Card* pcrdLead) override;
 	Suit SuitChooseTrump() override;
-	
-private: 
+
+private:
 	static const string c_rgstrNames[4];
 };
 

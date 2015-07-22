@@ -11,6 +11,6 @@ int main()
 
 	Game g = Game();
 	g.Play();
-	system("PAUSE");
+	getchar();
 	return 0;
 }

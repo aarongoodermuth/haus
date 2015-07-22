@@ -39,7 +39,7 @@ void Round::DealCards()
 
 
 void Round::DoBet()
-{	
+{
 	BetChoice bcCurHighestBid = BetChoice::DEFAULT_DEALER;
 	int iposCurHighBidder = _iposplDealer;
 	BetChoice bcCurBet;

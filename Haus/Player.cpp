@@ -30,7 +30,7 @@ void Player::ForceBet(BetChoice bc, bool fForcedToBet)
 	_fForcedToBet = fForcedToBet;
 }
 
-void Player::TakeCard(Card &crd)
+void Player::TakeCard(const Card &crd)
 {
 	_veccrdHand.push_back(crd);
 }

@@ -5,8 +5,8 @@
 #define NOTREACHED() assert(false)
 #define NOTREACHEDRET(x) do{assert(false); return x;}while(false)
 #else
-#define ASSERT(x) __noop
-#define ASSERTIMPLIES __noop
-#define NOTREACHED() __noop
+#define ASSERT(x) 0
+#define ASSERTIMPLIES(x, y) 0
+#define NOTREACHED() 0
 #define NOTREACHEDRET(x) return x
 #endif

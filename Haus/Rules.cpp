@@ -1,6 +1,7 @@
 #include "Rules.h"
 
 #include "Debug.h"
+#include "Haus.h"
 
 bool Rules::FLegalPlay(Card crdToPlay, vector<Card> veccrdHand, Card* pcrdLead)
 {
@@ -26,7 +27,7 @@ bool Rules::CardComparer::FGreaterThan(Card crdLeft, Card crdRight, Suit suitTru
 	// we are always greater than the null card
 	if (crdRight.suit == Suit::suitLim || crdRight.val == Value::valLim)
 		return true;
-	
+
 	bool fLeftTrump = FTrump(crdLeft, suitTrump);
 	bool fRightTrump = FTrump(crdRight, suitTrump);
 

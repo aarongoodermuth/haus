@@ -2,33 +2,15 @@
 
 #include <string>
 #include <vector>
+#include "Bet.h"
 #include "Cards.h"
+#include "UserController.h"
+#include "UserView.h"
 
 using namespace std;
 
-enum BetChoice // bc
-{
-	bcNil = -1,
-	bcFirst = 0,
-	PASS = 0,
-	THREE,
-	DEFAULT_DEALER = THREE,
-	FOUR,
-	FIVE,
-	SIX,
-	TWELVE,
-	bcMac = TWELVE,
-	cbc
-};
-
-
-struct BetChoiceInfo
-{
-	BetChoice bc;
-	int nBetAmount;
-	int nRequiredTricks;
-	string str;
-};
+//forward declarations
+class GameView;
 
 /*****************/
 /*  P L A Y E R  */
@@ -90,10 +72,17 @@ private:
 /*************/
 class User : Player
 {
+	friend class UserView;
+	friend class UserController;
+
 public:
-	User();
+	User(GameView* pgmvw);
 
 	BetChoice BcRequestDesiredBet() override;
 	Card CrdPlay(Card* pcrdLead) override;
 	Suit SuitChooseTrump() override;
+
+protected:
+	UserController _usrcnt;
+	UserView _usrvw;
 };

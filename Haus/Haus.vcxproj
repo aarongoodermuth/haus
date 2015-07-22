@@ -44,6 +44,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -65,19 +66,33 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cards.cpp" />
+    <ClCompile Include="Controller.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameView.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="UserController.cpp" />
+    <ClCompile Include="UserControllerCommandLineImpl.cpp" />
+    <ClCompile Include="UserView.cpp" />
     <ClCompile Include="proc.cpp" />
     <ClCompile Include="Round.cpp" />
+    <ClCompile Include="RoundView.cpp" />
     <ClCompile Include="Rules.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bet.h" />
     <ClInclude Include="Cards.h" />
+    <ClInclude Include="Controller.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameView.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="UserController.h" />
+    <ClInclude Include="UserControllerCommandLineImpl.h" />
+    <ClInclude Include="UserView.h" />
     <ClInclude Include="Round.h" />
+    <ClInclude Include="RoundView.h" />
     <ClInclude Include="Rules.h" />
+    <ClInclude Include="View.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

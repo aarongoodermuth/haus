@@ -7,6 +7,7 @@ const string Computer::c_rgstrNames[4] = { "Bender", "Karen", "Jarvis", "HAL" };
 const BetChoiceInfo Player::c_rgbci[Player::c_cBetChoices] =
 {
 	{ BetChoice::PASS, 0 /*nBetAmount*/, 0 /*nRequredTricks*/, "pass" },
+	{ BetChoice::THREE, 3 /*nBetAmount*/, 3 /*nRequredTricks*/, "three" },
 	{ BetChoice::FOUR, 4 /*nBetAmount*/, 4 /*nRequredTricks*/, "four" },
 	{ BetChoice::FIVE, 5 /*nBetAmount*/, 5 /*nRequredTricks*/, "five" },
 	{ BetChoice::SIX, 6 /*nBetAmount*/, 6 /*nRequredTricks*/, "six" },
@@ -111,7 +112,7 @@ Suit Computer::SuitChooseTrump()
 /*************/
 /*  U S E R  */
 /*************/
-User::User()
+User::User(GameView* pgmvw) : _usrvw(this, pgmvw), _usrcnt(this)
 {
 	_strName = "You";
 	Init();
@@ -119,25 +120,7 @@ User::User()
 
 BetChoice User::BcRequestDesiredBet()
 {
-	// TODO
-	return BetChoice::PASS; //temp
-	/*
-	int betDesired = 0;
-
-	if (betDesired == 0)
-	return 0;
-
-	while (true)
-	{
-	if (betDesired == 0)
-	return 0;
-
-	if (betDesired > currentHighest && IsValidBet())
-	{
-
-	}
-	}
-	}*/
+	return _usrcnt.BcRequestDesiredBet(c_rgbci, c_cBetChoices);
 }
 
 Card User::CrdPlay(Card* pcrdLead)

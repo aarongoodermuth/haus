@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "Cards.h"
+#include "GameView.h"
 #include "Player.h"
 #include "Round.h"
 
@@ -16,6 +17,7 @@ public:
 private:
 	vector<Player*> _vecppl;
 	int _iposplDealer;
+	GameView _gmvw;
 
 	void DoRound();
 	bool FWinnerExists();

@@ -8,6 +8,8 @@ debug:
 ship:
 	g++ $(FILES) $(OPT) -o $(OUT)
 
+all: debug ship
+
 clean:
 	rm Haus/*.gch *.out
 

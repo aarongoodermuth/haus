@@ -5,7 +5,7 @@
 class Controller
 {
 public:
-	Controller::Controller(View* pview);
+	Controller(View* pview);
 
 private:
 	const View* _pview;

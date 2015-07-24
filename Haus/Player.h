@@ -45,7 +45,7 @@ protected:
 	string _strName;
 	vector<Card> _veccrdHand;
 
-	static constexpr int c_cBetChoices = (int)BetChoice::cbc;
+	static const int c_cBetChoices = (int)BetChoice::cbc;
 	static const BetChoiceInfo c_rgbci[c_cBetChoices];
 };
 

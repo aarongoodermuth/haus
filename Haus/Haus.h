@@ -1,3 +1,4 @@
 #include "Debug.h"
 
-#define NULL nullptr
+#define uint unsigned int
+#define SafeDelete(x) if(x!=NULL)delete x

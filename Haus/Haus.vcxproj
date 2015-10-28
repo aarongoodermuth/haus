@@ -85,6 +85,7 @@
     <ClInclude Include="Debug.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameView.h" />
+    <ClInclude Include="Haus.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="UserController.h" />
     <ClInclude Include="UserControllerCommandLineImpl.h" />

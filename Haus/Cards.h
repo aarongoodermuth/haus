@@ -26,6 +26,7 @@ enum class Value
 	valLim
 };
 
+string StrFromSuit(Suit suit);
 
 struct Card
 {
@@ -33,6 +34,7 @@ struct Card
 	Card();
 	Suit suit;
 	Value val;
+	string StrAscii();
 };
 
 

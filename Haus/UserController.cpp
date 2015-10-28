@@ -11,16 +11,41 @@ UserController::UserController(User* pusr) : Controller(&pusr->_usrvw), _pusrvw(
 
 BetChoice UserController::BcRequestDesiredBet(const BetChoiceInfo* rgbci, int cbci)
 {
-	int bc;
+	int bc = bcNil;
+	bool fHitOnce = false;
 
-	_pusrvw->Show();
-	cout << "\nPlace a bet\nBet Choices:" << endl;
-
-	for (int ibci = 0; ibci < cbci; ibci++)
+	while (bc < (bcFirst+1) || bc > (bcMac+1))
 	{
-		cout << ibci+1 << ". " << rgbci[ibci].str << endl;
-	}
+		if (fHitOnce)
+			cout << "\n\nINVALID CHOICE\n";
 
-	cin >> bc;
-	return static_cast<BetChoice>(bc-1);
+		_pusrvw->Show();
+		cout << "\nPlace a bet\nBet Choices:" << endl;
+
+		for (int ibci = 0; ibci < cbci; ibci++)
+		{
+			cout << ibci + 1 << ". " << rgbci[ibci].str << endl;
+		}
+
+		cin >> bc;
+	}
+	return static_cast<BetChoice>(bc - 1);
+}
+
+uint UserController::IcrdRequestCrdPlay(const Card *pcrdLead, uint ccrd)
+{
+	uint icrd = -1;
+	bool fHitOnce = false;
+
+	while (icrd < 1 || icrd > ccrd)
+	{
+		if (fHitOnce)
+			cout << "\n\nINVALID CHOICE\n";
+
+		_pusrvw->Show();
+		cout << "\nPlace a bet\nBet Choices:" << endl;
+
+		cin >> icrd;
+	}
+	return icrd - 1;
 }

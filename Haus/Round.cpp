@@ -14,6 +14,11 @@ Round::Round(const vector<Player*>& vecppl, int iposplDealer)
 	_iposplDealer = iposplDealer;
 }
 
+Round::~Round()
+{
+	SafeDelete(_prndvw);
+}
+
 
 void Round::Do()
 {

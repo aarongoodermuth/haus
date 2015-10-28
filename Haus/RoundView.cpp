@@ -1,6 +1,12 @@
 #include "RoundView.h"
 
+#include <iostream>
+#include <string>
+#include "Cards.h"
+
 #include "Debug.h"
+
+using namespace std;
 
 RoundView::RoundView(vector<Card>* pveccrdPlayed, vector<Card>* pveccrdPlayedThisTurn) : _pveccrdPlayed(pveccrdPlayed), _pveccrdPlayedThisTurn(pveccrdPlayedThisTurn)
 {
@@ -8,5 +14,12 @@ RoundView::RoundView(vector<Card>* pveccrdPlayed, vector<Card>* pveccrdPlayedThi
 
 void RoundView::Show()
 {
-	NOTREACHED();
+	cout << "ROUND INFORMATION\n" <<
+		"=================\n" <<
+		"Trump: " << StrFromSuit(_pveccrdPlayedThisTurn->at(0).suit) << "\n" <<
+		"Played Cards: ";
+
+	for (int icrd = 0; icrd < _pveccrdPlayedThisTurn->size(); icrd++)
+		cout << _pveccrdPlayedThisTurn->at(icrd).StrAscii() << " ";
+
 }

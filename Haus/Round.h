@@ -1,8 +1,9 @@
 #pragma once
 
 #include <vector>
-#include "Player.h"
 #include "Cards.h"
+#include "Player.h"
+#include "RoundView.h"
 
 using namespace std;
 
@@ -10,6 +11,7 @@ class Round
 {
 public:
 	Round(const vector<Player*>& vecppl, int iposplDealer);
+	~Round();
 	void Do();
 
 private:
@@ -19,6 +21,7 @@ private:
 	Deck _dck;
 	int _iposplDealer;
 	int _iposplStartTrick;
+	RoundView* _prndvw;
 
 	void DealCards();
 	void DoBet();

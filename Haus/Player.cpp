@@ -2,6 +2,7 @@
 
 #include "Debug.h"
 #include "Rules.h"
+#include <iostream>
 
 const string Computer::c_rgstrNames[4] = { "Bender", "Karen", "Jarvis", "HAL" };
 const BetChoiceInfo Player::c_rgbci[Player::c_cBetChoices] =
@@ -125,14 +126,20 @@ BetChoice User::BcRequestDesiredBet()
 
 Card User::CrdPlay(Card* pcrdLead)
 {
-	// TODO
-	int iposcrd = -1;
+	bool fFirstAsk = true;
 	Card crdRet;
+	uint icrd;
+
 	do
 	{
-		crdRet = _veccrdHand[++iposcrd];
+		if (!fFirstAsk)
+			std::cout << endl << "That is not a legal card" << endl;
+		icrd = _usrcnt.IcrdRequestCrdPlay(pcrdLead, _veccrdHand.size());
+		crdRet = _veccrdHand[icrd];
+		fFirstAsk = false;
 	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead));
-	_veccrdHand.erase(_veccrdHand.begin() + iposcrd);
+
+	_veccrdHand.erase(_veccrdHand.begin() + icrd);
 	return crdRet;
 }
 

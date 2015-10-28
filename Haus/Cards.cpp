@@ -21,6 +21,29 @@ Card::Card()
 	val = Value::valLim;
 }
 
+static const string _mpvalstr[(int)Value::valLim] = { "9", "10", "J", "Q", "K", "A" };
+#ifdef _WIN32
+static const string _mpsuitstr[(int)Suit::suitLim] = { "\3" /*heart*/, "\4" /*diamond*/, "\5" /*club*/, "\6" /*spade*/ };
+#else
+#ifdef __linus
+static const string _mpsuitstr[(int)Suit::suitLim] = { "\u2665" /*heart*/, "\u2666" /*diamond*/, "\u2663" /*club*/, "\u2660" /*spade*/ };
+#else
+#error "What platform are we on"
+#endif // __linux
+#endif // _WIN32
+
+string StrFromSuit(Suit suit)
+{
+	if (suit < Suit::suitFirst || suit > Suit::suitLim)
+		NOTREACHEDRET("");
+	return _mpsuitstr[(int)suit];
+}
+
+string Card::StrAscii()
+{
+	return _mpvalstr[(int)val] + _mpsuitstr[(int)suit];
+}
+
 
 /*************/
 /*  D E C K  */

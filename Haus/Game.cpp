@@ -71,7 +71,9 @@ void Game::DisplayWinner()
 void Game::DoRound()
 {
 	Round rnd(_vecppl, _iposplDealer);
+	_gmvw.AttachPrndvw(rnd.PrndvwGet());
 	rnd.Do();
+	_gmvw.DetachPrndvw();
 	_iposplDealer++;
 	_iposplDealer = _iposplDealer % Rules::cpl;
 }

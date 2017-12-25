@@ -19,6 +19,7 @@ private:
 	int _iposplDealer;
 	GameView _gmvw;
 
+
 	void DoRound();
 	bool FWinnerExists();
 	void DetermineWinner();

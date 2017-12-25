@@ -11,8 +11,8 @@ class Round
 {
 public:
 	Round(const vector<Player*>& vecppl, int iposplDealer);
-	~Round();
 	void Do();
+	RoundView* PrndvwGet();
 
 private:
 	vector<Player*> _vecppl;
@@ -21,10 +21,12 @@ private:
 	Deck _dck;
 	int _iposplDealer;
 	int _iposplStartTrick;
-	RoundView* _prndvw;
+	RoundView _rndvw;
+	Suit _suitTrump;
 
 	void DealCards();
 	void DoBet();
+	void ChooseTrump();
 	void PlayTricks();
 	void DoScoring();
 };

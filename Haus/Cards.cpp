@@ -23,9 +23,9 @@ Card::Card()
 
 static const string _mpvalstr[(int)Value::valLim] = { "9", "10", "J", "Q", "K", "A" };
 #ifdef _WIN32
-static const string _mpsuitstr[(int)Suit::suitLim] = { "\3" /*heart*/, "\4" /*diamond*/, "\5" /*club*/, "\6" /*spade*/ };
+static const string _mpsuitstr[(int)Suit::suitLim] = { "H" /*heart*/, "D" /*diamond*/, "C" /*club*/, "S" /*spade*/ };
 #else
-#ifdef __linus
+#ifdef __linux
 static const string _mpsuitstr[(int)Suit::suitLim] = { "\u2665" /*heart*/, "\u2666" /*diamond*/, "\u2663" /*club*/, "\u2660" /*spade*/ };
 #else
 #error "What platform are we on"

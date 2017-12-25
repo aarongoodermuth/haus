@@ -9,12 +9,13 @@ using namespace std;
 class RoundView : public View
 {
 public:
-	RoundView(vector<Card>* pveccrdPlayed, vector<Card>* pveccrdPlayedThisTurn);
+	RoundView(vector<Card>* pveccrdPlayed, vector<Card>* pveccrdPlayedThisTurn, Suit* psuitTrump);
 	
 	void Show() override;
 
 private:
 	vector<Card>* _pveccrdPlayed;
 	vector<Card>* _pveccrdPlayedThisTurn;
+	Suit* _psuitTrump;
 };
 

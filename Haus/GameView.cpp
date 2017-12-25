@@ -1,13 +1,26 @@
 #include "GameView.h"
 
-#include "Debug.h"
+#include "Haus.h"
 
 
-GameView::GameView()
+GameView::GameView() : _prndvw(pNil)
 {
 }
 
 void GameView::Show()
 {
-	NOTREACHED();
+	if (_prndvw != pNil)
+		_prndvw->Show();
+}
+
+void GameView::AttachPrndvw(RoundView* prndvw)
+{
+	ASSERT(_prndvw == pNil);
+	_prndvw = prndvw;
+}
+
+void GameView::DetachPrndvw()
+{
+	ASSERT(_prndvw != pNil);
+	_prndvw = pNil;
 }

@@ -5,6 +5,7 @@ using namespace std;
 
 enum class Suit
 {
+	suitNil = -1,
 	HEART = 0,
 	suitFirst = 0,
 	DIAMOND,

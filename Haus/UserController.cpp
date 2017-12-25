@@ -43,7 +43,7 @@ uint UserController::IcrdRequestCrdPlay(const Card *pcrdLead, uint ccrd)
 			cout << "\n\nINVALID CHOICE\n";
 
 		_pusrvw->Show();
-		cout << "\nPlace a bet\nBet Choices:" << endl;
+		cout << "\nPlay a card\n" << endl;
 
 		cin >> icrd;
 	}

@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdio.h>
 #include "Cards.h"
 
 #include "Debug.h"
@@ -21,12 +22,14 @@ void RoundView::Show()
 
 	ASSERT(_psuitTrump != pNil && *_psuitTrump != Suit::suitNil);
 
-	cout << "ROUND INFORMATION\n" <<
+	cout << "\n\nROUND INFORMATION\n" <<
 		"=================\n" <<
-		"Trump: " << StrFromSuit(*_psuitTrump) << "\t" <<
+		"Trump: " << StrFromSuit(*_psuitTrump) << "\n" <<
 		"Lead Suit: " << StrFromSuit(_pveccrdPlayedThisTurn->at(0).suit) << "\n" <<
 		"Played Cards: ";
 
 	for (uint icrd = 0; icrd < _pveccrdPlayed->size(); icrd++)
-		cout << _pveccrdPlayed->at(icrd).StrAscii() << " ";
+		cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
+
+	cout << endl;
 }

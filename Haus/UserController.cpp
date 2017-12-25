@@ -41,6 +41,7 @@ uint UserController::IcrdRequestCrdPlay(const Card *pcrdLead, uint ccrd)
 	{
 		if (fHitOnce)
 			cout << "\n\nINVALID CHOICE\n";
+		fHitOnce = true;
 
 		_pusrvw->Show();
 		cout << "\nPlay a card\n" << endl;

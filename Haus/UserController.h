@@ -18,5 +18,7 @@ public:
 
 private:
 	UserView *_pusrvw;
+
+	static void ClearScreen();
 };
 

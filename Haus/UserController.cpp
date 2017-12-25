@@ -29,6 +29,7 @@ BetChoice UserController::BcRequestDesiredBet(const BetChoiceInfo* rgbci, int cb
 
 		cin >> bc;
 	}
+	ClearScreen();
 	return static_cast<BetChoice>(bc - 1);
 }
 
@@ -48,5 +49,14 @@ uint UserController::IcrdRequestCrdPlay(const Card *pcrdLead, uint ccrd)
 
 		cin >> icrd;
 	}
+	ClearScreen();
 	return icrd - 1;
+}
+
+
+void UserController::ClearScreen()
+{
+	// TODO: implement for UNIX
+	system("cls");
+	//cout << string(100, '\n');
 }

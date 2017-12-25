@@ -28,5 +28,7 @@ private:
 	bool* _pfForcedToBet;
 	string* _pstrName;
 	vector<Card>* _pveccrdHand;
+
+	void ClearScreen();
 };
 

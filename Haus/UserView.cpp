@@ -32,3 +32,9 @@ void UserView::Show()
 		cout << to_string(icrd+1) << ". " << _pveccrdHand->at(icrd).StrAscii() << "   ";
 	cout << endl;
 }
+
+
+void UserView::ClearScreen()
+{
+	cout << string(100, '\n');
+}

@@ -8,7 +8,7 @@ debug:
 ship:
 	g++ $(FILES) $(OPT) -o $(OUT)
 
-all: debug ship
+all: 	debug ship
 
 clean:
 	rm Haus/*.gch *.out
@@ -16,8 +16,14 @@ clean:
 cleaner: clean
 	rm $(OUT)
 
-run: debug
+run:
 	./$(OUT)
 
-runs: ship
+runs:
+	./$(OUT)
+
+bar:	debug
+	./$(OUT)
+
+bars:	ship
 	./$(OUT)

@@ -30,5 +30,6 @@ private:
 	void PlayTricks();
 	void ShowRoundSummary();
 	void DoScoring();
+	void ResetRound();
 };
 

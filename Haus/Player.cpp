@@ -53,8 +53,6 @@ void Player::DoScoring()
 		if (_fForcedToBet)
 			_cBumps++;
 	}
-
-	ResetRound();
 }
 
 bool Player::FIsWinner()

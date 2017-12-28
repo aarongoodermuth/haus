@@ -20,6 +20,7 @@ Round::Round(const vector<Player*>& vecppl, int iposplDealer) : _rndvw(&_veccrdP
 
 void Round::Do()
 {
+	ResetRound();
 	_dck.Reset();
 	_dck.Shuffle();
 	DealCards();
@@ -29,6 +30,12 @@ void Round::Do()
 	ShowRoundSummary();
 }
 
+void Round::ResetRound()
+{
+	_dck.Reset();
+	for (Player *ppl : _vecppl)
+		ppl->ResetRound();
+}
 
 RoundView* Round::PrndvwGet()
 {

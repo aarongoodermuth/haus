@@ -19,6 +19,8 @@ public:
 private:
 	UserView *_pusrvw;
 
+public:
 	static void ClearScreen();
+	static void WaitForUserAcknowledgement();
 };
 

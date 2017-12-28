@@ -33,6 +33,7 @@ public:
 	// Getters
 	inline int NScore(){ return _nScore; }
 	inline string StrName() { return _strName; }
+	inline int CTricksWon() { return _cTricksWon; }
 
 protected:
 	void Init();

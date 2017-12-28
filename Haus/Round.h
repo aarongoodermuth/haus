@@ -28,6 +28,7 @@ private:
 	void DoBet();
 	void ChooseTrump();
 	void PlayTricks();
+	void ShowRoundSummary();
 	void DoScoring();
 };
 

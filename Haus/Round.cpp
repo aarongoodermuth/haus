@@ -1,9 +1,11 @@
 #include "Round.h"
 
 #include <vector>
+#include <iostream>
 #include "Cards.h"
 #include "Debug.h"
 #include "Game.h"
+#include "Player.h"
 #include "Rules.h"
 
 using namespace std;
@@ -24,6 +26,7 @@ void Round::Do()
 	DoBet();
 	PlayTricks();
 	DoScoring();
+	ShowRoundSummary();
 }
 
 
@@ -109,4 +112,14 @@ void Round::DoScoring()
 {
 	for (int i = 0; i < 4; i++)
 		_vecppl[i]->DoScoring();
+}
+
+void Round::ShowRoundSummary()
+{
+	UserController::ClearScreen();
+	for (auto itppl : _vecppl)
+	{
+		cout << itppl->StrName() << ": " << itppl->CTricksWon() << " tricks Won.\n";
+	}
+	UserController::WaitForUserAcknowledgement();
 }

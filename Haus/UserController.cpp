@@ -53,10 +53,25 @@ uint UserController::IcrdRequestCrdPlay(const Card *pcrdLead, uint ccrd)
 	return icrd - 1;
 }
 
-
+// TODO: this is bad object design. But then again, this whole class is.
 void UserController::ClearScreen()
 {
-	// TODO: implement for UNIX
+#ifdef _WIN32
 	system("cls");
-	//cout << string(100, '\n');
+#else
+#ifdef __linux
+	system("clear");
+#else
+	cout << string(100, '\n');
+#endif // __linux
+#endif // _WIN32
+}
+
+
+// TODO: this is bad object design. But then again, this whole class is.
+void UserController::WaitForUserAcknowledgement()
+{
+	cout << "Press any key to continue...";
+	cin.ignore().get();
+	ClearScreen();
 }

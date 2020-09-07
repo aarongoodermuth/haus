@@ -15,3 +15,6 @@ ReadMe.txt
 *.ilk
 *.asm
 hausapp
+.vs/*
+Debug/*
+Release/*

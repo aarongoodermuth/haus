@@ -10,9 +10,10 @@
 
 using namespace std;
 
-Round::Round(const vector<Player*>& vecppl, int iposplDealer) : _rndvw(&_veccrdPlayed, &_veccrdPlayedThisTurn, &_suitTrump)
+Round::Round(vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
+	: _rndvw(&_veccrdPlayed, &_veccrdPlayedThisTurn, &_suitTrump)
+	, _vecpopl(vecpopl)
 {
-	_vecppl = vecppl;
 	_iposplDealer = iposplDealer;
 	_suitTrump = Suit::suitNil;
 }
@@ -33,8 +34,8 @@ void Round::Do()
 void Round::ResetRound()
 {
 	_dck.Reset();
-	for (Player *ppl : _vecppl)
-		ppl->ResetRound();
+	for (auto &popl : _vecpopl)
+		popl->ResetRound();
 }
 
 RoundView* Round::PrndvwGet()
@@ -50,7 +51,7 @@ void Round::DealCards()
 		int ipos = (i + _iposplDealer + 1) % Rules::cpl;
 		ASSERT(ipos >= 0 && ipos < Rules::cpl);
 		ASSERTIMPLIES(i == (Rules::cpl - 1), ipos == _iposplDealer);
-		_vecppl[ipos]->TakeCard(_dck.Deal());
+		_vecpopl[ipos]->TakeCard(_dck.Deal());
 	}
 }
 
@@ -67,7 +68,7 @@ void Round::DoBet()
 	{
 		ipos = (i + _iposplDealer) % Rules::cpl;
 		ASSERT(ipos < Rules::cpl && ipos >= 0);
-		bcCurBet = _vecppl[ipos]->BcRequestDesiredBet();
+		bcCurBet = _vecpopl[ipos]->BcRequestDesiredBet();
 		if (bcCurBet > bcCurHighestBid)
 		{
 			bcCurHighestBid = bcCurBet;
@@ -77,25 +78,25 @@ void Round::DoBet()
 	}
 
 	// now we know who will have to bet
-	_vecppl[iposCurHighBidder]->ForceBet(bcCurHighestBid, fForcedToTake);
+	_vecpopl[iposCurHighBidder]->ForceBet(bcCurHighestBid, fForcedToTake);
 	_iposplStartTrick = iposCurHighBidder;
 }
 
 
 void Round::PlayTricks()
 {
-	_suitTrump = _vecppl[_iposplDealer]->SuitChooseTrump();
+	_suitTrump = _vecpopl[_iposplDealer]->SuitChooseTrump();
 
 	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
 	{
 		int iposplHighestCard = _iposplStartTrick;
-		Card crdLead = _vecppl[_iposplStartTrick]->CrdPlay(NULL);
+		Card crdLead = _vecpopl[_iposplStartTrick]->CrdPlay(NULL);
 		Card crdHighest = crdLead;
 		for (int i = 1; i < Rules::cpl; i++)
 		{
 			int ipospl = (_iposplStartTrick + i) % Rules::cpl;
 			ASSERT(ipospl >= 0 && ipospl < Rules::cpl);
-			Card crdPlayed = _vecppl[ipospl]->CrdPlay(&crdLead);
+			Card crdPlayed = _vecpopl[ipospl]->CrdPlay(&crdLead);
 			_veccrdPlayedThisTurn.push_back(crdPlayed);
 			_veccrdPlayed.push_back(crdPlayed);
 
@@ -105,7 +106,7 @@ void Round::PlayTricks()
 				iposplHighestCard = ipospl;
 			}
 		}
-		_vecppl[iposplHighestCard]->TakeTrick();
+		_vecpopl[iposplHighestCard]->TakeTrick();
 		_iposplStartTrick = iposplHighestCard;
 
 		_veccrdPlayedThisTurn.clear();
@@ -118,15 +119,15 @@ void Round::PlayTricks()
 void Round::DoScoring()
 {
 	for (int i = 0; i < 4; i++)
-		_vecppl[i]->DoScoring();
+		_vecpopl[i]->DoScoring();
 }
 
 void Round::ShowRoundSummary()
 {
 	UserController::ClearScreen();
-	for (auto itppl : _vecppl)
+	for (auto &popl : _vecpopl)
 	{
-		cout << itppl->StrName() << ": " << itppl->CTricksWon() << " tricks Won.\n";
+		cout << popl->StrName() << ": " << popl->CTricksWon() << " tricks Won.\n";
 	}
 	UserController::WaitForUserAcknowledgement();
 }

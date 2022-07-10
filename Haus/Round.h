@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include "Cards.h"
 #include "Player.h"
@@ -10,12 +11,12 @@ using namespace std;
 class Round
 {
 public:
-	Round(const vector<Player*>& vecppl, int iposplDealer);
+	Round(vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer);
 	void Do();
 	RoundView* PrndvwGet();
 
 private:
-	vector<Player*> _vecppl;
+	vector<std::unique_ptr<Player>> &_vecpopl;
 	vector<Card> _veccrdPlayed;
 	vector<Card> _veccrdPlayedThisTurn;
 	Deck _dck;

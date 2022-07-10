@@ -54,7 +54,7 @@ protected:
 /*********************/
 /*  C O M P U T E R  */
 /*********************/
-class Computer : Player
+class Computer : public Player
 {
 public:
 	Computer(int iPos);
@@ -71,7 +71,7 @@ private:
 /*************/
 /*  U S E R  */
 /*************/
-class User : Player
+class User : public Player
 {
 	friend class UserView;
 	friend class UserController;

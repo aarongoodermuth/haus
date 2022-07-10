@@ -10,12 +10,11 @@ class Game
 {
 public:
 	Game();
-	~Game();
 
 	void Play();
 
 private:
-	vector<Player*> _vecppl;
+	vector<std::unique_ptr<Player>> _vecpopl;
 	int _iposplDealer;
 	GameView _gmvw;
 

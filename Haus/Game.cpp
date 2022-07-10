@@ -13,18 +13,9 @@ Game::Game() : _gmvw()
 	for (int i = 0; i < 4; i++)
 	{
 		if (i == userPos)
-			_vecppl.push_back((Player*)new User(&_gmvw));
+			_vecpopl.push_back(std::make_unique<User>(&_gmvw));
 		else
-			_vecppl.push_back((Player*)new Computer(i));
-	}
-}
-
-Game::~Game()
-{
-	ASSERT(_vecppl.size() == Rules::cpl);
-	for (int i = 0; i < Rules::cpl; i++)
-	{
-		delete _vecppl[i];
+			_vecpopl.push_back(std::make_unique<Computer>(i));
 	}
 }
 
@@ -43,7 +34,7 @@ bool Game::FWinnerExists()
 {
 	for (int i = 0; i < 4; i++)
 	{
-		if (_vecppl[i]->FIsWinner())
+		if (_vecpopl[i]->FIsWinner())
 			return true;
 	}
 	return false;
@@ -55,14 +46,14 @@ void Game::DisplayWinner()
 	int nMax = 0;
 	for (int i = 0; i < 4; i++)
 	{
-		nMax = _vecppl[i]->NScore() > nMax ? _vecppl[i]->NScore() : nMax;
+		nMax = _vecpopl[i]->NScore() > nMax ? _vecpopl[i]->NScore() : nMax;
 	}
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (nMax == _vecppl[i]->NScore())
+		if (nMax == _vecpopl[i]->NScore())
 		{
-			cout << _vecppl[i]->StrName() << " wins with a score of " << nMax << endl;
+			cout << _vecpopl[i]->StrName() << " wins with a score of " << nMax << endl;
 		}
 	}
 }
@@ -70,7 +61,7 @@ void Game::DisplayWinner()
 
 void Game::DoRound()
 {
-	Round rnd(_vecppl, _iposplDealer);
+	Round rnd(_vecpopl, _iposplDealer);
 	_gmvw.AttachPrndvw(rnd.PrndvwGet());
 	rnd.Do();
 	_gmvw.DetachPrndvw();

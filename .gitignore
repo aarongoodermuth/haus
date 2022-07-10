@@ -16,5 +16,5 @@ ReadMe.txt
 *.asm
 hausapp
 .vs/*
-Debug/*
-Release/*
+*/Debug/*
+*/Release/*

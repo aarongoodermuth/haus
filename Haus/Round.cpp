@@ -89,7 +89,7 @@ void Round::PlayTricks()
 	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
 	{
 		int iposplHighestCard = _iposplStartTrick;
-		Card crdLead = _vecpopl[_iposplStartTrick]->CrdPlay(NULL);
+		Card crdLead = _vecpopl[_iposplStartTrick]->CrdPlay(nullptr);
 		Card crdHighest = crdLead;
 		for (int i = 1; i < Rules::cpl; i++)
 		{

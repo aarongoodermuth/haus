@@ -5,7 +5,7 @@
 
 bool Rules::FLegalPlay(Card crdToPlay, vector<Card> veccrdHand, Card* pcrdLead)
 {
-	if (pcrdLead == NULL || crdToPlay.suit == pcrdLead->suit)
+	if (pcrdLead == nullptr || crdToPlay.suit == pcrdLead->suit)
 		return true;
 
 	return std::ranges::none_of(veccrdHand, [suit = pcrdLead->suit](const auto& crd) noexcept { return crd.suit == suit; });

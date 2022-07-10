@@ -1,7 +1,7 @@
 #include "Player.h"
 
-#include "Debug.h"
 #include "Rules.h"
+#include <assert.h>
 #include <iostream>
 
 const string Computer::c_rgstrNames[4] = { "Bender", "Karen", "Jarvis", "HAL" };
@@ -39,7 +39,7 @@ void Player::TakeCard(const Card &crd)
 
 void Player::DoScoring()
 {
-	ASSERT(_bc != bcNil && _bc >= bcFirst && _bc <= bcMac);
+	assert(_bc != bcNil && _bc >= bcFirst && _bc <= bcMac);
 
 	int nRoundBet = c_rgbci[_bc].nRequiredTricks;
 	if (_cTricksWon >= nRoundBet)
@@ -126,7 +126,7 @@ Card User::CrdPlay(Card* pcrdLead)
 {
 	bool fFirstAsk = true;
 	Card crdRet;
-	uint icrd;
+	unsigned int icrd;
 
 	do
 	{

@@ -1,8 +1,8 @@
 #include "Cards.h"
 
+#include <assert.h>
 #include <cstdlib>
 
-#include "Debug.h"
 
 
 /*************/
@@ -34,8 +34,7 @@ static const string _mpsuitstr[(int)Suit::suitLim] = { "\u2665" /*heart*/, "\u26
 
 string StrFromSuit(Suit suit)
 {
-	if (suit < Suit::suitFirst || suit > Suit::suitLim)
-		NOTREACHEDRET("");
+	assert(!(suit < Suit::suitFirst || suit > Suit::suitLim));
 	return _mpsuitstr[(int)suit];
 }
 
@@ -59,12 +58,12 @@ void Deck::Shuffle()
 	const int ccrds = (int)Suit::suitLim * (int)Value::valLim;
 	int iposSwap;
 
-	ASSERT(ccrds == _veccrd.size());
+	assert(ccrds == _veccrd.size());
 
 	for (int ipos = 0; ipos < ccrds; ipos++)
 	{
 		iposSwap = ipos + rand() % (ccrds - ipos);
-		ASSERT(iposSwap >= ipos  && iposSwap <= ccrds);
+		assert(iposSwap >= ipos  && iposSwap <= ccrds);
 		Card crdT = _veccrd[ipos];
 		Card crdSwap = _veccrd[iposSwap];
 

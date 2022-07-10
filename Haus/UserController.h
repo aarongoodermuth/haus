@@ -1,6 +1,5 @@
 #pragma once
 #include "Controller.h"
-#include "Haus.h"
 
 #include "Bet.h"
 #include "UserView.h"
@@ -14,7 +13,7 @@ public:
 	UserController(User* pusr);
 	
 	BetChoice BcRequestDesiredBet(const BetChoiceInfo* rgbci, int cbci);
-	uint IcrdRequestCrdPlay(const Card *pcrdLead, uint ccrd);
+	unsigned int IcrdRequestCrdPlay(const Card *pcrdLead, unsigned int ccrd);
 
 private:
 	UserView *_pusrvw;

@@ -1,26 +1,25 @@
 #include "GameView.h"
+#include <assert.h>
 
-#include "Haus.h"
 
-
-GameView::GameView() : _prndvw(pNil)
+GameView::GameView() : _prndvw(nullptr)
 {
 }
 
 void GameView::Show()
 {
-	if (_prndvw != pNil)
+	if (_prndvw != nullptr)
 		_prndvw->Show();
 }
 
 void GameView::AttachPrndvw(RoundView* prndvw)
 {
-	ASSERT(_prndvw == pNil);
+	assert(_prndvw == nullptr);
 	_prndvw = prndvw;
 }
 
 void GameView::DetachPrndvw()
 {
-	ASSERT(_prndvw != pNil);
-	_prndvw = pNil;
+	assert(_prndvw != nullptr);
+	_prndvw = nullptr;
 }

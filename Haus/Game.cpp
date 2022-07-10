@@ -1,9 +1,9 @@
 #include "Game.h"
+#include <algorithm>
 #include <iostream>
-#include "Debug.h"
 #include "Player.h"
 #include "Rules.h"
-#include <algorithm>
+
 
 
 using namespace std;

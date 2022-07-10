@@ -1,14 +1,10 @@
 #include "RoundView.h"
 
-#include "Haus.h"
-
 #include <iostream>
 #include <string>
 #include <stdio.h>
 #include "Cards.h"
 #include "Rules.h"
-
-#include "Debug.h"
 
 using namespace std;
 
@@ -29,7 +25,7 @@ void RoundView::Show()
 		"=================\n" <<
 		"Trump: " << StrFromSuit(*_psuitTrump) << "\n" <<
 		"Played This Round: ";
-	for (uint icrd = 0; icrd < _pveccrdPlayed->size(); icrd++)
+	for (unsigned int icrd = 0; icrd < _pveccrdPlayed->size(); icrd++)
 		cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
 
 
@@ -39,7 +35,7 @@ void RoundView::Show()
 		"Lead Suit: " << (fNoCardsPlayed ? "(You Choose)" : StrFromSuit(_pveccrdPlayedThisTurn->at(0).suit)) << "\n" <<
 		"Played This Turn: ";
 
-	for (uint icrd = (_pveccrdPlayed->size() / Rules::cpl) * Rules::cpl; icrd < _pveccrdPlayed->size(); icrd++)
+	for (unsigned int icrd = (_pveccrdPlayed->size() / Rules::cpl) * Rules::cpl; icrd < _pveccrdPlayed->size(); icrd++)
 		cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
 
 	cout << endl;

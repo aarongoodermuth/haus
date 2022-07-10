@@ -1,9 +1,9 @@
 #include "Round.h"
 
+#include <assert.h>
 #include <vector>
 #include <iostream>
 #include "Cards.h"
-#include "Debug.h"
 #include "Game.h"
 #include "Player.h"
 #include "Rules.h"
@@ -49,8 +49,7 @@ void Round::DealCards()
 	for (int i = 0; i < Rules::ccrdsPerPl * Rules::cpl; i++)
 	{
 		int ipos = (i + _iposplDealer + 1) % Rules::cpl;
-		ASSERT(ipos >= 0 && ipos < Rules::cpl);
-		ASSERTIMPLIES(i == (Rules::cpl - 1), ipos == _iposplDealer);
+		assert(ipos >= 0 && ipos < Rules::cpl);
 		_vecpopl[ipos]->TakeCard(_dck.Deal());
 	}
 }
@@ -67,7 +66,7 @@ void Round::DoBet()
 	for (int i = 0; i < Rules::cpl; i++)
 	{
 		ipos = (i + _iposplDealer) % Rules::cpl;
-		ASSERT(ipos < Rules::cpl && ipos >= 0);
+		assert(ipos < Rules::cpl && ipos >= 0);
 		bcCurBet = _vecpopl[ipos]->BcRequestDesiredBet();
 		if (bcCurBet > bcCurHighestBid)
 		{
@@ -95,7 +94,7 @@ void Round::PlayTricks()
 		for (int i = 1; i < Rules::cpl; i++)
 		{
 			int ipospl = (_iposplStartTrick + i) % Rules::cpl;
-			ASSERT(ipospl >= 0 && ipospl < Rules::cpl);
+			assert(ipospl >= 0 && ipospl < Rules::cpl);
 			Card crdPlayed = _vecpopl[ipospl]->CrdPlay(&crdLead);
 			_veccrdPlayedThisTurn.push_back(crdPlayed);
 			_veccrdPlayed.push_back(crdPlayed);

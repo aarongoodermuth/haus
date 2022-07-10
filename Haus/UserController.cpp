@@ -33,9 +33,9 @@ BetChoice UserController::BcRequestDesiredBet(const BetChoiceInfo* rgbci, int cb
 	return static_cast<BetChoice>(bc - 1);
 }
 
-uint UserController::IcrdRequestCrdPlay(const Card *pcrdLead, uint ccrd)
+unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead, unsigned int ccrd)
 {
-	uint icrd = -1;
+	unsigned int icrd = -1;
 	bool fHitOnce = false;
 
 	while (icrd < 1 || icrd > ccrd)

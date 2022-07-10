@@ -1,8 +1,7 @@
 #include "Rules.h"
 
 #include <algorithm>
-#include "Debug.h"
-#include "Haus.h"
+#include <assert.h>
 
 bool Rules::FLegalPlay(Card crdToPlay, vector<Card> veccrdHand, Card* pcrdLead)
 {
@@ -15,8 +14,8 @@ bool Rules::FLegalPlay(Card crdToPlay, vector<Card> veccrdHand, Card* pcrdLead)
 
 bool Rules::CardComparer::FGreaterThan(Card crdLeft, Card crdRight, Suit suitTrump)
 {
-	ASSERT(!(crdLeft.suit == crdRight.suit && crdLeft.val == crdRight.val));
-	ASSERT(crdLeft.suit != Suit::suitLim && crdLeft.val != Value::valLim);
+	assert(!(crdLeft.suit == crdRight.suit && crdLeft.val == crdRight.val));
+	assert(crdLeft.suit != Suit::suitLim && crdLeft.val != Value::valLim);
 
 	// we are always greater than the null card
 	if (crdRight.suit == Suit::suitLim || crdRight.val == Value::valLim)
@@ -64,7 +63,7 @@ int Rules::CardComparer::NTrumpValuation(Card crd, Suit suitTrump)
 	case Value::NINE:
 		break;
 	default:
-		NOTREACHED();
+		assert(false);
 	}
 
 	return nValue;
@@ -98,7 +97,8 @@ bool Rules::FLeftBar(Card crd, Suit suitTrump)
 	case Suit::DIAMOND:
 		return crd.suit == Suit::HEART;
 	default:
-		NOTREACHEDRET(false);
+		assert(false);
+		return false;
 	}
 }
 

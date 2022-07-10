@@ -12,12 +12,12 @@ RoundView::RoundView(vector<Card>* pveccrdPlayed, vector<Card>* pveccrdPlayedThi
 {
 }
 
-void RoundView::Show()
+void RoundView::Show(std::optional<Suit> optsuit)
 {
 	bool fNoCardsPlayed = (_pveccrdPlayedThisTurn->size() == 0);
 
 	// we don't have enough information about the round yet. Just return.
-	if (_psuitTrump == nullptr || *_psuitTrump == Suit::suitNil)
+	if (!optsuit)
 		return;
 
 	// Show all the info that is about the whole round

@@ -6,10 +6,10 @@ GameView::GameView() : _prndvw(nullptr)
 {
 }
 
-void GameView::Show()
+void GameView::Show(std::optional<Suit> optsuit)
 {
 	if (_prndvw != nullptr)
-		_prndvw->Show();
+		_prndvw->Show(std::move(optsuit));
 }
 
 void GameView::AttachPrndvw(RoundView* prndvw)

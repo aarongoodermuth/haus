@@ -15,9 +15,9 @@ UserView::UserView(User* pusr, GameView* gmvw) : _pgmvw(gmvw)
 	_pveccrdHand = &pusr->_veccrdHand;
 }
 
-void UserView::Show()
+void UserView::Show(std::optional<Suit> optsuit)
 {
-	_pgmvw->Show();
+	_pgmvw->Show(optsuit);
 
 	if (*_pbc != BetChoice::PASS && *_pbc != BetChoice::bcNil)
 	{

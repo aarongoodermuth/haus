@@ -15,7 +15,6 @@ Round::Round(vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
 	, _vecpopl(vecpopl)
 {
 	_iposplDealer = iposplDealer;
-	_suitTrump = Suit::suitNil;
 }
 
 
@@ -84,7 +83,7 @@ void Round::DoBet()
 
 void Round::PlayTricks()
 {
-	_suitTrump = _vecpopl[_iposplDealer]->SuitChooseTrump();
+	Suit suitTrump = _vecpopl[_iposplDealer]->SuitChooseTrump();
 
 	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
 	{
@@ -110,8 +109,6 @@ void Round::PlayTricks()
 
 		_veccrdPlayedThisTurn.clear();
 	}
-
-	_suitTrump = Suit::suitNil;
 }
 
 

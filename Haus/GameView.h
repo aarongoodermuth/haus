@@ -7,7 +7,7 @@ class GameView : public View
 public:
 	GameView();
 
-	void Show() override;
+	void Show(std::optional<Suit> optsuit) override;
 	void AttachPrndvw(RoundView* prndvw);
 	void DetachPrndvw();
 

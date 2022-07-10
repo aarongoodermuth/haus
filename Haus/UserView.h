@@ -16,7 +16,7 @@ class UserView : public View
 public:
 	UserView(User* pusr, GameView* gmvw);
 
-	void Show() override;
+	void Show(std::optional<Suit> optsuit) override;
 
 private:
 	GameView* _pgmvw;

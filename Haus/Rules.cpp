@@ -1,5 +1,6 @@
 #include "Rules.h"
 
+#include <algorithm>
 #include "Debug.h"
 #include "Haus.h"
 
@@ -8,14 +9,7 @@ bool Rules::FLegalPlay(Card crdToPlay, vector<Card> veccrdHand, Card* pcrdLead)
 	if (pcrdLead == NULL || crdToPlay.suit == pcrdLead->suit)
 		return true;
 
-	int ccrd = veccrdHand.size();
-	for (int icrd = 0; icrd < ccrd; icrd++)
-	{
-		if (veccrdHand[icrd].suit == pcrdLead->suit)
-			return false;
-	}
-
-	return true;
+	return std::ranges::none_of(veccrdHand, [suit = pcrdLead->suit](const auto& crd) noexcept { return crd.suit == suit; });
 }
 
 

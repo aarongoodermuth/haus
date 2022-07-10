@@ -118,16 +118,14 @@ void Round::PlayTricks()
 
 void Round::DoScoring()
 {
-	for (int i = 0; i < 4; i++)
-		_vecpopl[i]->DoScoring();
+	for (auto &popl : _vecpopl)
+		popl->DoScoring();
 }
 
 void Round::ShowRoundSummary()
 {
 	UserController::ClearScreen();
 	for (auto &popl : _vecpopl)
-	{
 		cout << popl->StrName() << ": " << popl->CTricksWon() << " tricks Won.\n";
-	}
 	UserController::WaitForUserAcknowledgement();
 }

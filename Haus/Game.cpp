@@ -3,6 +3,8 @@
 #include "Debug.h"
 #include "Player.h"
 #include "Rules.h"
+#include <algorithm>
+
 
 using namespace std;
 
@@ -32,30 +34,15 @@ void Game::Play()
 
 bool Game::FWinnerExists()
 {
-	for (int i = 0; i < 4; i++)
-	{
-		if (_vecpopl[i]->FIsWinner())
-			return true;
-	}
-	return false;
+	return std::ranges::any_of(_vecpopl, [](const auto& popl) noexcept { return popl->FIsWinner(); });
 }
 
 
 void Game::DisplayWinner()
 {
-	int nMax = 0;
-	for (int i = 0; i < 4; i++)
-	{
-		nMax = _vecpopl[i]->NScore() > nMax ? _vecpopl[i]->NScore() : nMax;
-	}
-
-	for (int i = 0; i < 4; i++)
-	{
-		if (nMax == _vecpopl[i]->NScore())
-		{
-			cout << _vecpopl[i]->StrName() << " wins with a score of " << nMax << endl;
-		}
-	}
+	auto fnComparePlByNScore = [](const auto& popl1, const auto& popl2) noexcept { return popl1->NScore() > popl2->NScore(); };
+	auto itpoplWinner = max_element(_vecpopl.begin(), _vecpopl.end(), fnComparePlByNScore);
+	cout << (*itpoplWinner)->StrName() << " wins with a score of " << (*itpoplWinner)->NScore() << '\n';
 }
 
 

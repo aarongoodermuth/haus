@@ -19,7 +19,7 @@ void UserView::Show(std::optional<Suit> optsuit)
 {
 	_pgmvw->Show(optsuit);
 
-	if (*_pbc != BetChoice::PASS && *_pbc != BetChoice::bcNil)
+	if (*_pbc != BetChoice::PASS)
 	{
 		cout << "Your Bet: " << *_pbc << " " << (*_pfForcedToBet ? "Under" : "") << endl
 			<< "Tricks Won: " << *_pcTricksWon<< endl;

@@ -6,7 +6,6 @@ using namespace std;
 
 enum BetChoice // bc
 {
-	bcNil = -1,
 	bcFirst = 0,
 	PASS = 0,
 	THREE,

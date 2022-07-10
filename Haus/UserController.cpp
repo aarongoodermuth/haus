@@ -11,10 +11,12 @@ UserController::UserController(User* pusr) : Controller(&pusr->_usrvw), _pusrvw(
 
 BetChoice UserController::BcRequestDesiredBet(const std::array<BetChoiceInfo, 6> &rgbci, int cbci)
 {
-	int bc = bcNil;
+	int bc;
 	bool fHitOnce = false;
 
-	while (bc < (bcFirst+1) || bc > (bcMac+1))
+	auto fnValidBc = [](int bc) noexcept { return bc > bcFirst && bc < bcMac; };
+
+	do
 	{
 		if (fHitOnce)
 			cout << "\n\nINVALID CHOICE\n";
@@ -28,7 +30,8 @@ BetChoice UserController::BcRequestDesiredBet(const std::array<BetChoiceInfo, 6>
 		}
 
 		cin >> bc;
-	}
+	} while (!fnValidBc(bc));
+
 	ClearScreen();
 	return static_cast<BetChoice>(bc - 1);
 }

@@ -30,8 +30,6 @@ void Player::TakeCard(const Card &crd)
 
 void Player::DoScoring()
 {
-	assert(_bc != bcNil && _bc >= bcFirst && _bc <= bcMac);
-
 	int nRoundBet = c_rgbci[_bc].nRequiredTricks;
 	if (_cTricksWon >= nRoundBet)
 	{

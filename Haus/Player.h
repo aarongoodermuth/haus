@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 #include <vector>
 #include "Bet.h"
@@ -47,7 +48,14 @@ protected:
 	vector<Card> _veccrdHand;
 
 	static const int c_cBetChoices = (int)BetChoice::cbc;
-	static const BetChoiceInfo c_rgbci[c_cBetChoices];
+	static constexpr const std::array<BetChoiceInfo, 6> c_rgbci = {
+	BetChoiceInfo{ BetChoice::PASS, 0 /*nBetAmount*/, 0 /*nRequredTricks*/, "pass" },
+	BetChoiceInfo{ BetChoice::THREE, 3 /*nBetAmount*/, 3 /*nRequredTricks*/, "three" },
+	BetChoiceInfo{ BetChoice::FOUR, 4 /*nBetAmount*/, 4 /*nRequredTricks*/, "four" },
+	BetChoiceInfo{ BetChoice::FIVE, 5 /*nBetAmount*/, 5 /*nRequredTricks*/, "five" },
+	BetChoiceInfo{ BetChoice::SIX, 6 /*nBetAmount*/, 6 /*nRequredTricks*/, "six" },
+	BetChoiceInfo{ BetChoice::TWELVE, 12 /*nBetAmount*/, 6 /*nRequredTricks*/, "haus" }
+	};
 };
 
 
@@ -64,7 +72,7 @@ public:
 	Suit SuitChooseTrump() override;
 
 private:
-	static const string c_rgstrNames[4];
+	static constexpr const std::array<const char*, 4> c_rgstrNames = { "Bender", "Karen", "Jarvis", "HAL" };
 };
 
 

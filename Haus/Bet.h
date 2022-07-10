@@ -25,5 +25,5 @@ struct BetChoiceInfo
 	BetChoice bc;
 	int nBetAmount;
 	int nRequiredTricks;
-	string str;
+	const char *sz;
 };

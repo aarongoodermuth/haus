@@ -1,9 +1,7 @@
 #include "UserView.h"
 
-#include "Debug.h"
-#include "Player.h"
-
 #include <iostream>
+#include "Player.h"
 
 using namespace std;
 

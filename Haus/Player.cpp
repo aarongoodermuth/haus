@@ -1,19 +1,10 @@
 #include "Player.h"
 
+#include "Bet.h"
 #include "Rules.h"
 #include <assert.h>
 #include <iostream>
 
-const string Computer::c_rgstrNames[4] = { "Bender", "Karen", "Jarvis", "HAL" };
-const BetChoiceInfo Player::c_rgbci[Player::c_cBetChoices] =
-{
-	{ BetChoice::PASS, 0 /*nBetAmount*/, 0 /*nRequredTricks*/, "pass" },
-	{ BetChoice::THREE, 3 /*nBetAmount*/, 3 /*nRequredTricks*/, "three" },
-	{ BetChoice::FOUR, 4 /*nBetAmount*/, 4 /*nRequredTricks*/, "four" },
-	{ BetChoice::FIVE, 5 /*nBetAmount*/, 5 /*nRequredTricks*/, "five" },
-	{ BetChoice::SIX, 6 /*nBetAmount*/, 6 /*nRequredTricks*/, "six" },
-	{ BetChoice::TWELVE, 12 /*nBetAmount*/, 6 /*nRequredTricks*/, "haus" }
-};
 
 /*****************/
 /*  P L A Y E R  */

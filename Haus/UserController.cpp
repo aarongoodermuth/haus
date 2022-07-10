@@ -9,7 +9,7 @@ UserController::UserController(User* pusr) : Controller(&pusr->_usrvw), _pusrvw(
 {
 }
 
-BetChoice UserController::BcRequestDesiredBet(const BetChoiceInfo* rgbci, int cbci)
+BetChoice UserController::BcRequestDesiredBet(const std::array<BetChoiceInfo, 6> &rgbci, int cbci)
 {
 	int bc = bcNil;
 	bool fHitOnce = false;
@@ -24,7 +24,7 @@ BetChoice UserController::BcRequestDesiredBet(const BetChoiceInfo* rgbci, int cb
 
 		for (int ibci = 0; ibci < cbci; ibci++)
 		{
-			cout << ibci + 1 << ". " << rgbci[ibci].str << endl;
+			cout << ibci + 1 << ". " << rgbci[ibci].sz << endl;
 		}
 
 		cin >> bc;

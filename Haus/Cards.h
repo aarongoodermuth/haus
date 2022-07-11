@@ -64,6 +64,8 @@ public:
 	Card Deal();
 
 private:
+	static constexpr size_t c_ccrds = EnumCast(Suit::suitLim) * EnumCast(Value::valLim);
+
 	void Shuffle();
 	std::vector<Card> _veccrd;
 };

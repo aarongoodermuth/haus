@@ -22,14 +22,10 @@ Deck::Deck()
 
 void Deck::Shuffle()
 {
-	constexpr int ccrds = EnumCast(Suit::suitLim) * EnumCast(Value::valLim);
-
-	assert(ccrds == _veccrd.size());
-
-	for (int ipos = 0; ipos < ccrds; ipos++)
+	for (int ipos = 0; ipos < c_ccrds; ipos++)
 	{
-		int iposSwap = ipos + rand() % (ccrds - ipos);
-		assert(iposSwap >= ipos  && iposSwap <= ccrds);
+		int iposSwap = ipos + rand() % (c_ccrds - ipos);
+		assert(iposSwap >= ipos  && iposSwap <= c_ccrds);
 
 		std::swap(_veccrd[ipos], _veccrd[iposSwap]);
 	}

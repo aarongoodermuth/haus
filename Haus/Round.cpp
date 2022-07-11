@@ -21,8 +21,6 @@ Round::Round(vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
 void Round::Do()
 {
 	ResetRound();
-	_dck.Reset();
-	_dck.Shuffle();
 	DealCards();
 	DoBet();
 	PlayTricks();
@@ -32,7 +30,7 @@ void Round::Do()
 
 void Round::ResetRound()
 {
-	_dck.Reset();
+	_dck = {};
 	for (auto &popl : _vecpopl)
 		popl->ResetRound();
 }

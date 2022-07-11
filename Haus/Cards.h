@@ -44,10 +44,9 @@ class Deck
 public:
 	Deck();
 
-	void Shuffle();
 	Card Deal();
-	void Reset();
 
 private:
+	void Shuffle();
 	vector<Card> _veccrd;
 };

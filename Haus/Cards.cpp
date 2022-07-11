@@ -49,7 +49,15 @@ string Card::StrAscii()
 /*************/
 Deck::Deck()
 {
-	Reset();
+	for (int suit = (int)Suit::suitFirst; suit < (int)Suit::suitLim; suit++)
+	{
+		for (int val = (int)Value::valFirst; val < (int)Value::valLim; val++)
+		{
+			_veccrd.push_back(Card((Suit)suit, (Value)val));
+		}
+	}
+
+	Shuffle();
 }
 
 
@@ -78,18 +86,4 @@ Card Deck::Deal()
 	Card crdRet = _veccrd.back();
 	_veccrd.pop_back();
 	return crdRet;
-}
-
-
-void Deck::Reset()
-{
-	_veccrd.clear();
-
-	for (int suit = (int)Suit::suitFirst; suit < (int)Suit::suitLim; suit++)
-	{
-		for (int val = (int)Value::valFirst; val < (int)Value::valLim; val++)
-		{
-			_veccrd.push_back(Card((Suit)suit, (Value)val));
-		}
-	}
 }

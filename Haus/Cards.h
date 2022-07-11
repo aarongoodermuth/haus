@@ -47,8 +47,6 @@ constexpr char ChFromSuit(Suit suit)
 
 struct Card
 {
-	Card(Suit suitT, Value valT);
-	Card();
 	Suit suit;
 	Value val;
 	constexpr const char *SzAscii()

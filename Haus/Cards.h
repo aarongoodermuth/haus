@@ -49,10 +49,7 @@ struct Card
 {
 	Suit suit;
 	Value val;
-	constexpr const char *SzAscii()
-	{
-		return _mpvalstr[EnumCast(val)] + ChFromSuit(suit);
-	}
+	std::string StrAscii();
 };
 
 

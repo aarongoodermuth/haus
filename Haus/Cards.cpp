@@ -5,6 +5,15 @@
 #include "Util.h"
 
 
+
+std::string Card::StrAscii()
+{
+	std::string asdf = _mpvalstr[EnumCast(val)];
+	asdf.push_back(ChFromSuit(suit));
+	return asdf;
+}
+
+
 /*************/
 /*  D E C K  */
 /*************/

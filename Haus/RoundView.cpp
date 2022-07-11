@@ -26,7 +26,7 @@ void RoundView::Show(std::optional<Suit> optsuit)
 		"Trump: " << ChFromSuit(*_psuitTrump) << "\n" <<
 		"Played This Round: ";
 	for (unsigned int icrd = 0; icrd < _pveccrdPlayed->size(); icrd++)
-		cout << _pveccrdPlayed->at(icrd).SzAscii() << "  ";
+		cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
 
 
 	// Show all the info that is just relevant to this trickset
@@ -36,7 +36,7 @@ void RoundView::Show(std::optional<Suit> optsuit)
 		"Played This Turn: ";
 
 	for (unsigned int icrd = (_pveccrdPlayed->size() / Rules::cpl) * Rules::cpl; icrd < _pveccrdPlayed->size(); icrd++)
-		cout << _pveccrdPlayed->at(icrd).SzAscii() << "  ";
+		cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
 
 	cout << endl;
 }

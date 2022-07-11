@@ -2,6 +2,7 @@
 
 #include "Player.h"
 #include "UserController.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ BetChoice UserController::BcRequestDesiredBet(const std::array<BetChoiceInfo, 6>
 	int bc;
 	bool fHitOnce = false;
 
-	auto fnValidBc = [](int bc) noexcept { return bc > bcFirst && bc < bcMac; };
+	auto fnValidBc = [](int bc) noexcept { return bc > EnumCast(BetChoice::bcFirst) && bc < EnumCast(BetChoice::bcMac); };
 
 	do
 	{

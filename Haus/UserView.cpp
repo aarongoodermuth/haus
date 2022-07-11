@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include "Player.h"
+#include "Util.h"
 
 using namespace std;
 
@@ -13,6 +14,7 @@ UserView::UserView(User* pusr, GameView* gmvw) : _pgmvw(gmvw)
 	_pnScore = &pusr->_nScore;
 	_pstrName = &pusr->_strName;
 	_pveccrdHand = &pusr->_veccrdHand;
+	_pcTricksWon = &pusr->_cTricksWon;
 }
 
 void UserView::Show(std::optional<Suit> optsuit)
@@ -21,7 +23,7 @@ void UserView::Show(std::optional<Suit> optsuit)
 
 	if (*_pbc != BetChoice::PASS)
 	{
-		cout << "Your Bet: " << *_pbc << " " << (*_pfForcedToBet ? "Under" : "") << endl
+		cout << "Your Bet: " << EnumCast(*_pbc) << " " << (*_pfForcedToBet ? "Under" : "") << endl
 			<< "Tricks Won: " << *_pcTricksWon<< endl;
 	}
 

@@ -1,10 +1,6 @@
 #pragma once
 
-#include <string>
-
-using namespace std;
-
-enum BetChoice // bc
+enum class BetChoice : int // bc
 {
 	bcFirst = 0,
 	PASS = 0,

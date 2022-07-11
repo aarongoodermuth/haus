@@ -2,6 +2,7 @@
 
 #include "Bet.h"
 #include "Rules.h"
+#include "Util.h"
 #include <assert.h>
 #include <iostream>
 
@@ -30,7 +31,7 @@ void Player::TakeCard(const Card &crd)
 
 void Player::DoScoring()
 {
-	int nRoundBet = c_rgbci[_bc].nRequiredTricks;
+	int nRoundBet = c_rgbci[EnumCast(_bc)].nRequiredTricks;
 	if (_cTricksWon >= nRoundBet)
 	{
 		_nScore += _cTricksWon;
@@ -71,7 +72,7 @@ BetChoice Computer::BcRequestDesiredBet()
 {
 	// TODO
 	return BetChoice::PASS; //temp
-	return static_cast<BetChoice>(rand() % BetChoice::cbc);
+	return static_cast<BetChoice>(rand() % EnumCast(BetChoice::cbc));
 }
 
 

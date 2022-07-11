@@ -39,11 +39,11 @@ public:
 protected:
 	void Init();
 
-	int _cTricksWon;
-	BetChoice _bc;
-	int _cBumps;
-	int _nScore;
-	bool _fForcedToBet;
+	int _cTricksWon = 0;
+	BetChoice _bc = BetChoice::PASS;
+	int _cBumps = 0;
+	int _nScore = 0;
+	bool _fForcedToBet = false;
 	string _strName;
 	vector<Card> _veccrdHand;
 

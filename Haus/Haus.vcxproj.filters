@@ -104,5 +104,8 @@
     <ClInclude Include="UserView.h">
       <Filter>Header Files\Views</Filter>
     </ClInclude>
+    <ClInclude Include="Util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

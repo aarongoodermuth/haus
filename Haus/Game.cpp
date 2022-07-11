@@ -11,7 +11,6 @@ using namespace std;
 Game::Game() : _gmvw()
 {
 	int userPos = rand() % 4;
-	_iposplDealer = rand() % 4;
 	for (int i = 0; i < 4; i++)
 	{
 		if (i == userPos)

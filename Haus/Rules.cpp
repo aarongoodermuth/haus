@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <assert.h>
 
-bool Rules::FLegalPlay(Card crdToPlay, vector<Card> veccrdHand, Card* pcrdLead)
+bool Rules::FLegalPlay(Card crdToPlay, std::vector<Card> veccrdHand, Card* pcrdLead)
 {
 	if (pcrdLead == nullptr || crdToPlay.suit == pcrdLead->suit)
 		return true;

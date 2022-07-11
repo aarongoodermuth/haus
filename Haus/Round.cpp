@@ -15,6 +15,7 @@ Round::Round(vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
 	, _vecpopl(vecpopl)
 {
 	_iposplDealer = iposplDealer;
+	_iposplStartTrick = (_iposplDealer + 1) % Rules::cpl;
 }
 
 

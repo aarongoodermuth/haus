@@ -2,7 +2,7 @@
 
 #include <assert.h>
 #include <cstdlib>
-
+#include "Util.h"
 
 
 /*************/
@@ -19,28 +19,6 @@ Card::Card()
 {
 	suit = Suit::suitLim;
 	val = Value::valLim;
-}
-
-static const string _mpvalstr[(int)Value::valLim] = { "9", "10", "J", "Q", "K", "A" };
-#ifdef _WIN32
-static const string _mpsuitstr[(int)Suit::suitLim] = { "H" /*heart*/, "D" /*diamond*/, "C" /*club*/, "S" /*spade*/ };
-#else
-#ifdef __linux
-static const string _mpsuitstr[(int)Suit::suitLim] = { "\u2665" /*heart*/, "\u2666" /*diamond*/, "\u2663" /*club*/, "\u2660" /*spade*/ };
-#else
-#error "What platform are we on"
-#endif // __linux
-#endif // _WIN32
-
-string StrFromSuit(Suit suit)
-{
-	assert(!(suit < Suit::suitFirst || suit > Suit::suitLim));
-	return _mpsuitstr[(int)suit];
-}
-
-string Card::StrAscii()
-{
-	return _mpvalstr[(int)val] + _mpsuitstr[(int)suit];
 }
 
 

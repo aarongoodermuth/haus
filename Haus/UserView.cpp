@@ -29,7 +29,7 @@ void UserView::Show(std::optional<Suit> optsuit)
 
 	cout << "Your Hand: ";
 	for (size_t icrd = 0; icrd < _pveccrdHand->size(); icrd++)
-		cout << to_string(icrd+1) << ". " << _pveccrdHand->at(icrd).StrAscii() << "   ";
+		cout << to_string(icrd+1) << ". " << _pveccrdHand->at(icrd).SzAscii() << "   ";
 	cout << endl;
 }
 

@@ -72,7 +72,7 @@ public:
 	Suit SuitChooseTrump() override;
 
 private:
-	static constexpr const std::array<const char*, 4> c_rgstrNames = { "Bender", "Karen", "Jarvis", "HAL" };
+	static constexpr const std::array<const char*, 4> c_rgszNames = { "Bender", "Karen", "Jarvis", "HAL" };
 };
 
 

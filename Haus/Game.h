@@ -9,7 +9,7 @@
 class Game
 {
 public:
-	Game();
+	Game(const std::vector<std::unique_ptr<User>> &vecpopl);
 
 	void Play();
 

@@ -64,7 +64,7 @@ void Player::Init()
 /*********************/
 Computer::Computer(int iPos)
 {
-	_strName = c_rgstrNames[iPos];
+	_strName = c_rgszNames[iPos];
 	Init();
 }
 

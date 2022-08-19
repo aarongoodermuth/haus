@@ -8,16 +8,12 @@
 
 using namespace std;
 
-Game::Game() : _gmvw()
+Game::Game(const std::vector<std::unique_ptr<User>> &vecpopl)
+	: _vecpopl(vecpopl)
 {
-	int userPos = rand() % 4;
-	for (int i = 0; i < 4; i++)
-	{
-		if (i == userPos)
-			_vecpopl.push_back(std::make_unique<User>(&_gmvw));
-		else
-			_vecpopl.push_back(std::make_unique<Computer>(i));
-	}
+	_vecpopl.reserve(Rules::cpl);
+	std::ranges::copy(vecpopl, std::back_inserter(_vecpopl));
+	std::generate(_vecpopl.end(), _vecpopl.begin() + Rules::cpl, []() { return std::make_unique<Computer>(0); });
 }
 
 

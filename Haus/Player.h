@@ -7,6 +7,7 @@
 #include "Cards.h"
 #include "UserController.h"
 #include "UserView.h"
+#include <memory>
 
 using namespace std;
 
@@ -85,13 +86,13 @@ class User : public Player
 	friend class UserController;
 
 public:
-	User(GameView* pgmvw);
+	User();
 
 	BetChoice BcRequestDesiredBet() override;
 	Card CrdPlay(Card* pcrdLead) override;
 	Suit SuitChooseTrump() override;
 
 protected:
-	UserController _usrcnt;
-	UserView _usrvw;
+	std::unique_ptr<Controller> _pousrcnt = std::make_unique<BrainlessController>();
+	std::unique_ptr<View> _pousrvw = std::make_unique<NoView>();
 };

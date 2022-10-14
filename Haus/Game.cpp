@@ -5,15 +5,11 @@
 #include "Rules.h"
 
 
-
-using namespace std;
-
-Game::Game(const std::vector<std::unique_ptr<User>> &vecpopl)
-	: _vecpopl(vecpopl)
+Game::Game(std::vector<std::unique_ptr<Player>> &&vecpopl)
 {
 	_vecpopl.reserve(Rules::cpl);
-	std::ranges::copy(vecpopl, std::back_inserter(_vecpopl));
-	std::generate(_vecpopl.end(), _vecpopl.begin() + Rules::cpl, []() { return std::make_unique<Computer>(0); });
+	std::ranges::move(vecpopl, std::back_inserter(_vecpopl));
+	std::generate_n(std::inserter(_vecpopl, _vecpopl.end()), Rules::cpl - 1, []() { return std::make_unique<Computer>(0); });
 }
 
 

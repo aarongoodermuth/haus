@@ -6,9 +6,6 @@
 
 using namespace std;
 
-UserController::UserController(User* pusr) : Controller(&pusr->_usrvw), _pusrvw(&pusr->_usrvw)
-{
-}
 
 BetChoice UserController::BcRequestDesiredBet(const std::array<BetChoiceInfo, 6> &rgbci, int cbci)
 {

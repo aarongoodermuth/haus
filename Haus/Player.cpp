@@ -101,7 +101,7 @@ Suit Computer::SuitChooseTrump()
 /*************/
 /*  U S E R  */
 /*************/
-User::User(GameView* pgmvw) : _usrvw(this, pgmvw), _usrcnt(this)
+User::User()
 {
 	_strName = "You";
 	Init();
@@ -109,7 +109,7 @@ User::User(GameView* pgmvw) : _usrvw(this, pgmvw), _usrcnt(this)
 
 BetChoice User::BcRequestDesiredBet()
 {
-	return _usrcnt.BcRequestDesiredBet(c_rgbci, c_cBetChoices);
+	return _pousrcnt->BcRequestDesiredBet();
 }
 
 Card User::CrdPlay(Card* pcrdLead)
@@ -122,7 +122,7 @@ Card User::CrdPlay(Card* pcrdLead)
 	{
 		if (!fFirstAsk)
 			std::cout << endl << "That is not a legal card" << endl;
-		icrd = _usrcnt.IcrdRequestCrdPlay(pcrdLead, _veccrdHand.size());
+		icrd = _pousrcnt->IcrdRequestCrdPlay();
 		crdRet = _veccrdHand[icrd];
 		fFirstAsk = false;
 	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead));

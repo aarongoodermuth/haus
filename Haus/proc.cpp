@@ -10,8 +10,9 @@ int main()
 	srand((unsigned int)time(nullptr));
 #endif
 
-	Game g = Game({ std::make_unique<User>() });
-	g.Play();
+	std::vector<std::unique_ptr<Player>> vecpopl;
+	vecpopl.push_back(std::make_unique<User>());
+	Game(std::move(vecpopl)).Play();
 	getchar();
 	return 0;
 }

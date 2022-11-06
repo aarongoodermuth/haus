@@ -2,17 +2,24 @@
 
 #include "View.h"
 #include "Bet.h"
+#include "Rules.h"
+#include "Player.h"
 
 class Controller
 {
 public:
+	Controller(const Player* ppl) : _ppl(ppl) {}
 	virtual BetChoice BcRequestDesiredBet() = 0;
-	virtual int IcrdRequestCrdPlay() = 0;
+	virtual int IcrdRequestCrdPlay(const Card* pcrdLead) = 0;
+
+protected:
+	const Player* _ppl;
 };
 
 
-class BrainlessController : public Controller
+class BrainlessController : protected Controller
 {
-	BetChoice BcRequestDesiredBet() override { return BetChoice::PASS; }
-	int IcrdRequestCrdPlay() override { return 0; }
+	BrainlessController(const Player* ppl) : Controller(ppl) {};
+	BetChoice BcRequestDesiredBet() override;
+	int IcrdRequestCrdPlay(const Card* pcrdLead) override;
 };

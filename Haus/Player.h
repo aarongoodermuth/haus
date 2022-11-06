@@ -6,6 +6,7 @@
 #include "Bet.h"
 #include "Cards.h"
 #include "UserController.h"
+#include "Controller.h"
 #include "UserView.h"
 #include <memory>
 
@@ -57,6 +58,9 @@ protected:
 	BetChoiceInfo{ BetChoice::SIX, 6 /*nBetAmount*/, 6 /*nRequredTricks*/, "six" },
 	BetChoiceInfo{ BetChoice::TWELVE, 12 /*nBetAmount*/, 6 /*nRequredTricks*/, "haus" }
 	};
+
+	friend class Controller;
+	friend class BrainlessController;
 };
 
 
@@ -93,6 +97,6 @@ public:
 	Suit SuitChooseTrump() override;
 
 protected:
-	std::unique_ptr<Controller> _pousrcnt = std::make_unique<BrainlessController>();
+	std::unique_ptr<UserController> _pousrcnt = std::make_unique<UserController>();
 	std::unique_ptr<View> _pousrvw = std::make_unique<NoView>();
 };

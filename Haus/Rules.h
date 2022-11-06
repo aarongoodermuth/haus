@@ -7,7 +7,7 @@
 	 static const int cpl = 4;
 	 static const int ccrdsPerPl = 6;
 
-	 static bool FLegalPlay(Card crdToPlay, std::vector<Card> veccrdHand, Card* pcrdLead);
+	 static bool FLegalPlay(const Card crdToPlay, const std::vector<Card> veccrdHand, const Card* pcrdLead);
 
 	 class CardComparer
 	 {

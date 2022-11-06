@@ -7,7 +7,7 @@
 using namespace std;
 
 
-BetChoice UserController::BcRequestDesiredBet(const std::array<BetChoiceInfo, 6> &rgbci, int cbci)
+BetChoice UserController::BcRequestDesiredBet()
 {
 	int bc;
 	bool fHitOnce = false;
@@ -22,9 +22,9 @@ BetChoice UserController::BcRequestDesiredBet(const std::array<BetChoiceInfo, 6>
 		_pusrvw->Show(std::nullopt); // no suit has been chosen yet
 		cout << "\nPlace a bet\nBet Choices:" << endl;
 
-		for (int ibci = 0; ibci < cbci; ibci++)
+		for (int ibci = 0; ibci < sizeof(Player::c_rgbci); ibci++)
 		{
-			cout << ibci + 1 << ". " << rgbci[ibci].sz << endl;
+			cout << ibci + 1 << ". " << Player::c_rgbci[ibci].sz << endl;
 		}
 
 		cin >> bc;

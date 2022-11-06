@@ -109,7 +109,7 @@ User::User()
 
 BetChoice User::BcRequestDesiredBet()
 {
-	return _pousrcnt->BcRequestDesiredBet();
+	return _pousrcnt->BcRequestDesiredBet(c_rgbci, sizeof(c_rgbci));
 }
 
 Card User::CrdPlay(Card* pcrdLead)

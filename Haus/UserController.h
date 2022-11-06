@@ -6,13 +6,14 @@
 
 // forward declaration
 class User;
+class Player;
 
-class UserController : public Controller
+class UserController : protected Controller
 {
 public:
-	UserController(User* pusr);
+	UserController(User* pusr) : Controller(static_cast<Player*>(pusr)) {}
 	
-	BetChoice BcRequestDesiredBet(const std::array<BetChoiceInfo, 6> &rgbci, int cbci);
+	BetChoice BcRequestDesiredBet() override;
 	unsigned int IcrdRequestCrdPlay(const Card *pcrdLead, unsigned int ccrd);
 
 private:

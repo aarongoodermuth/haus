@@ -6,13 +6,13 @@
 class View
 {
 public:
-	virtual void Show(std::optional<Suit> optsuit) = 0;
+	virtual void Show() = 0;
 };
 
 
 class NoView : public View
 {
 public:
-	void Show(std::optional<Suit> optsuit) override {}
+	void Show() override {}
 };
 

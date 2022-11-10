@@ -16,9 +16,9 @@ UserView::UserView(User* pusr, GameView* gmvw) : _pgmvw(gmvw)
 	_pcTricksWon = &pusr->_cTricksWon;
 }
 
-void UserView::Show(std::optional<Suit> optsuit)
+void UserView::Show()
 {
-	_pgmvw->Show(optsuit);
+	_pgmvw->Show();
 
 	if (*_pbc != BetChoice::PASS)
 	{

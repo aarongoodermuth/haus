@@ -11,7 +11,7 @@ public:
 
 	void AttachGame(const Game*);
 
-	void Show(std::optional<Suit> optsuit) override;
+	void Show() override;
 	void AttachPrndvw(RoundView* prndvw);
 	void DetachPrndvw();
 

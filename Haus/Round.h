@@ -22,7 +22,7 @@ private:
 	int _iposplDealer;
 	int _iposplStartTrick;
 	RoundView _rndvw;
-	Suit _suitTrump;
+	std::optional<Suit> _optsuitTrump;
 
 	void DealCards();
 	void DoBet();

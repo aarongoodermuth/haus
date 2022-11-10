@@ -49,7 +49,7 @@ struct Card
 {
 	Suit suit;
 	Value val;
-	std::string StrAscii();
+	std::string StrAscii() const;
 };
 
 

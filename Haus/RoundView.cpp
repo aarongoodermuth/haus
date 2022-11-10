@@ -7,34 +7,49 @@
 #include "Rules.h"
 
 
-RoundView::RoundView(std::vector<Card>* pveccrdPlayed, std::vector<Card>* pveccrdPlayedThisTurn, Suit* psuitTrump) : _pveccrdPlayed(pveccrdPlayed), _pveccrdPlayedThisTurn(pveccrdPlayedThisTurn), _psuitTrump(psuitTrump)
+RoundView::RoundView(std::vector<Card>* pveccrdPlayed, std::vector<Card>* pveccrdPlayedThisTurn, std::optional<Suit>* poptsuitTrump) 
+	: _pveccrdPlayed(pveccrdPlayed)
+	, _pveccrdPlayedThisTurn(pveccrdPlayedThisTurn)
+	, _poptsuitTrump(poptsuitTrump)
 {
 }
 
-void RoundView::Show(std::optional<Suit> optsuit)
+void RoundView::Show()
 {
 	bool fNoCardsPlayed = (_pveccrdPlayedThisTurn->size() == 0);
 
 	// Show all the info that is about the whole round
-	std::cout << "ROUND INFORMATION\n" <<
-		"=================\n" <<
-		"Trump: " << ChFromSuit(*_psuitTrump) << "\n";
+	std::cout	<< "ROUND INFORMATION\n"
+				<< "=================\n";
 
-	// we don't have enough information about the round yet. Just return.
-	if (!optsuit)
+	if (!*_poptsuitTrump)
 		return;
+
+	std::cout << "Trump: " << ChFromSuit(_poptsuitTrump->value()) << "\n";
+
 	std::cout << "Played This Round: ";
-	for (unsigned int icrd = 0; icrd < _pveccrdPlayed->size(); icrd++)
-		std::cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
+	for (const Card &crd : *_pveccrdPlayed)
+		std::cout <<crd.StrAscii() << "  ";
+
+	const std::string strLeadSuit = [fNoCardsPlayed, this]() -> std::string
+	{
+		if (fNoCardsPlayed)
+			return "(You Choose)";
+		
+		std::string strRet;
+		strRet.push_back(ChFromSuit(_pveccrdPlayedThisTurn->front().suit));
+		return strRet;
+
+	}();
 
 	// Show all the info that is just relevant to this trickset
 	std::cout << "\n\nTHIS TURN\n" <<
 		"=================\n" <<
-		"Lead Suit: " << (fNoCardsPlayed ? "(You Choose)" : std::to_string(ChFromSuit(_pveccrdPlayedThisTurn->at(0).suit))) << "\n" <<
+		"Lead Suit: " << strLeadSuit << "\n" <<
 		"Played This Turn: ";
 
-	for (unsigned int icrd = (_pveccrdPlayed->size() / Rules::cpl) * Rules::cpl; icrd < _pveccrdPlayed->size(); icrd++)
-		std::cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
+	for (const Card &crd : *_pveccrdPlayedThisTurn)
+		std::cout << crd.StrAscii() << "  ";
 
 	std::cout << std::endl;
 }

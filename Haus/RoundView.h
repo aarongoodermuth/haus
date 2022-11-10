@@ -8,13 +8,13 @@
 class RoundView : public View
 {
 public:
-	RoundView(std::vector<Card>* pveccrdPlayed, std::vector<Card>* pveccrdPlayedThisTurn, Suit* psuitTrump);
+	RoundView(std::vector<Card>* pveccrdPlayed, std::vector<Card>* pveccrdPlayedThisTurn, std::optional<Suit>* poptsuitTrump);
 	
-	void Show(std::optional<Suit> optsuit) override;
+	void Show() override;
 
 private:
 	std::vector<Card>* _pveccrdPlayed;
 	std::vector<Card>* _pveccrdPlayedThisTurn;
-	Suit* _psuitTrump;
+	std::optional<Suit>* _poptsuitTrump;
 };
 

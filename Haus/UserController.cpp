@@ -23,7 +23,7 @@ BetChoice UserController::BcRequestDesiredBet()
 		if (fHitOnce)
 			std::cout << "\n\nINVALID CHOICE\n";
 
-		_pousrvw->Show(std::nullopt); // no suit has been chosen yet
+		_pousrvw->Show();
 		std::cout << "\nPlace a bet\nBet Choices:" << std::endl;
 
 		for (int ibci = 0; ibci < sizeof(Player::c_rgbci) / sizeof(BetChoiceInfo); ibci++)
@@ -49,7 +49,7 @@ unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)
 			std::cout << "\n\nINVALID CHOICE\n";
 		fHitOnce = true;
 
-		_pousrvw->Show(std::nullopt /*TODO*/);
+		_pousrvw->Show();
 		std::cout << "\nPlay a card\n" << std::endl;
 
 		std::cin >> icrd;

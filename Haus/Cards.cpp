@@ -6,7 +6,7 @@
 
 
 
-std::string Card::StrAscii()
+std::string Card::StrAscii() const
 {
 	std::string asdf = _mpvalstr[EnumCast(val)];
 	asdf.push_back(ChFromSuit(suit));

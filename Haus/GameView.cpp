@@ -13,10 +13,10 @@ void GameView::AttachGame(const Game* pgm)
 	_pgm = pgm;
 }
 
-void GameView::Show(std::optional<Suit> optsuit)
+void GameView::Show()
 {
 	if (_prndvw != nullptr)
-		_prndvw->Show(std::move(optsuit));
+		_prndvw->Show();
 }
 
 void GameView::AttachPrndvw(RoundView* prndvw)

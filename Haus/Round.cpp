@@ -10,7 +10,7 @@
 
 
 Round::Round(std::vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
-	: _rndvw(&_veccrdPlayed, &_veccrdPlayedThisTurn, &_suitTrump)
+	: _rndvw(&_veccrdPlayed, &_veccrdPlayedThisTurn, &_optsuitTrump)
 	, _vecpopl(vecpopl)
 {
 	_iposplDealer = iposplDealer;
@@ -81,7 +81,7 @@ void Round::DoBet()
 
 void Round::PlayTricks()
 {
-	Suit suitTrump = _vecpopl[_iposplDealer]->SuitChooseTrump();
+	this->_optsuitTrump = _vecpopl[_iposplDealer]->SuitChooseTrump();
 
 	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
 	{
@@ -96,7 +96,7 @@ void Round::PlayTricks()
 			_veccrdPlayedThisTurn.push_back(crdPlayed);
 			_veccrdPlayed.push_back(crdPlayed);
 
-			if (Rules::CardComparer::FGreaterThan(crdPlayed, crdHighest, _suitTrump))
+			if (Rules::CardComparer::FGreaterThan(crdPlayed, crdHighest, *_optsuitTrump))
 			{
 				crdHighest = crdPlayed;
 				iposplHighestCard = ipospl;

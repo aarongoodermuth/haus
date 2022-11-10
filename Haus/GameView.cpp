@@ -1,9 +1,16 @@
 #include "GameView.h"
 #include <assert.h>
+#include <iostream>
+#include "Game.h"
 
 
 GameView::GameView() : _prndvw(nullptr)
 {
+}
+
+void GameView::AttachGame(const Game* pgm)
+{
+	_pgm = pgm;
 }
 
 void GameView::Show(std::optional<Suit> optsuit)

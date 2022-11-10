@@ -15,18 +15,17 @@ void RoundView::Show(std::optional<Suit> optsuit)
 {
 	bool fNoCardsPlayed = (_pveccrdPlayedThisTurn->size() == 0);
 
-	// we don't have enough information about the round yet. Just return.
-	if (!optsuit)
-		return;
-
 	// Show all the info that is about the whole round
 	std::cout << "ROUND INFORMATION\n" <<
 		"=================\n" <<
-		"Trump: " << ChFromSuit(*_psuitTrump) << "\n" <<
-		"Played This Round: ";
+		"Trump: " << ChFromSuit(*_psuitTrump) << "\n";
+
+	// we don't have enough information about the round yet. Just return.
+	if (!optsuit)
+		return;
+	std::cout << "Played This Round: ";
 	for (unsigned int icrd = 0; icrd < _pveccrdPlayed->size(); icrd++)
 		std::cout << _pveccrdPlayed->at(icrd).StrAscii() << "  ";
-
 
 	// Show all the info that is just relevant to this trickset
 	std::cout << "\n\nTHIS TURN\n" <<

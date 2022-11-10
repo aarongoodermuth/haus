@@ -61,6 +61,7 @@ protected:
 
 	friend class Controller;
 	friend class BrainlessController;
+	friend class UserController;
 };
 
 
@@ -97,6 +98,6 @@ public:
 	Suit SuitChooseTrump() override;
 
 protected:
-	std::unique_ptr<UserController> _pousrcnt = std::make_unique<UserController>();
+	std::unique_ptr<UserController> _pousrcnt = std::make_unique<UserController>(this);
 	std::unique_ptr<View> _pousrvw = std::make_unique<NoView>();
 };

@@ -6,6 +6,9 @@
 
 using namespace std;
 
+UserController::UserController(User *pusr) : Controller(static_cast<Player *>(pusr))
+{
+}
 
 BetChoice UserController::BcRequestDesiredBet()
 {
@@ -34,12 +37,12 @@ BetChoice UserController::BcRequestDesiredBet()
 	return static_cast<BetChoice>(bc - 1);
 }
 
-unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead, unsigned int ccrd)
+unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)
 {
 	unsigned int icrd = -1;
 	bool fHitOnce = false;
 
-	while (icrd < 1 || icrd > ccrd)
+	while (icrd < 1 || icrd > _ppl->_veccrdHand.size())
 	{
 		if (fHitOnce)
 			cout << "\n\nINVALID CHOICE\n";

@@ -109,7 +109,7 @@ User::User()
 
 BetChoice User::BcRequestDesiredBet()
 {
-	return _pousrcnt->BcRequestDesiredBet(c_rgbci, sizeof(c_rgbci));
+	return _pousrcnt->BcRequestDesiredBet();
 }
 
 Card User::CrdPlay(Card* pcrdLead)
@@ -122,7 +122,7 @@ Card User::CrdPlay(Card* pcrdLead)
 	{
 		if (!fFirstAsk)
 			std::cout << endl << "That is not a legal card" << endl;
-		icrd = _pousrcnt->IcrdRequestCrdPlay();
+		icrd = _pousrcnt->IcrdRequestCrdPlay(pcrdLead);
 		crdRet = _veccrdHand[icrd];
 		fFirstAsk = false;
 	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead));

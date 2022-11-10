@@ -4,18 +4,17 @@
 #include <vector>
 #include "Cards.h"
 
-using namespace std;
 
 class RoundView : public View
 {
 public:
-	RoundView(vector<Card>* pveccrdPlayed, vector<Card>* pveccrdPlayedThisTurn, Suit* psuitTrump);
+	RoundView(std::vector<Card>* pveccrdPlayed, std::vector<Card>* pveccrdPlayedThisTurn, Suit* psuitTrump);
 	
 	void Show(std::optional<Suit> optsuit) override;
 
 private:
-	vector<Card>* _pveccrdPlayed;
-	vector<Card>* _pveccrdPlayedThisTurn;
+	std::vector<Card>* _pveccrdPlayed;
+	std::vector<Card>* _pveccrdPlayedThisTurn;
 	Suit* _psuitTrump;
 };
 

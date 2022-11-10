@@ -10,7 +10,6 @@
 #include "UserView.h"
 #include <memory>
 
-using namespace std;
 
 //forward declarations
 class GameView;
@@ -35,7 +34,7 @@ public:
 
 	// Getters
 	inline int NScore(){ return _nScore; }
-	inline string StrName() { return _strName; }
+	inline std::string StrName() { return _strName; }
 	inline int CTricksWon() { return _cTricksWon; }
 
 protected:
@@ -46,8 +45,8 @@ protected:
 	int _cBumps = 0;
 	int _nScore = 0;
 	bool _fForcedToBet = false;
-	string _strName;
-	vector<Card> _veccrdHand;
+	std::string _strName;
+	std::vector<Card> _veccrdHand;
 
 	static const int c_cBetChoices = (int)BetChoice::cbc;
 	static constexpr const std::array<BetChoiceInfo, 6> c_rgbci = {

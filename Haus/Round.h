@@ -6,19 +6,18 @@
 #include "Player.h"
 #include "RoundView.h"
 
-using namespace std;
 
 class Round
 {
 public:
-	Round(vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer);
+	Round(std::vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer);
 	void Do();
 	RoundView* PrndvwGet();
 
 private:
-	vector<std::unique_ptr<Player>> &_vecpopl;
-	vector<Card> _veccrdPlayed;
-	vector<Card> _veccrdPlayedThisTurn;
+	std::vector<std::unique_ptr<Player>> &_vecpopl;
+	std::vector<Card> _veccrdPlayed;
+	std::vector<Card> _veccrdPlayedThisTurn;
 	Deck _dck;
 	int _iposplDealer;
 	int _iposplStartTrick;

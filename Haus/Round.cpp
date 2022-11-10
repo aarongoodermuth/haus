@@ -8,9 +8,8 @@
 #include "Player.h"
 #include "Rules.h"
 
-using namespace std;
 
-Round::Round(vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
+Round::Round(std::vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
 	: _rndvw(&_veccrdPlayed, &_veccrdPlayedThisTurn, &_suitTrump)
 	, _vecpopl(vecpopl)
 {
@@ -121,6 +120,6 @@ void Round::ShowRoundSummary()
 {
 	UserController::ClearScreen();
 	for (auto &popl : _vecpopl)
-		cout << popl->StrName() << ": " << popl->CTricksWon() << " tricks Won.\n";
+		std::cout << popl->StrName() << ": " << popl->CTricksWon() << " tricks Won.\n";
 	UserController::WaitForUserAcknowledgement();
 }

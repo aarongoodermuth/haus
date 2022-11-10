@@ -14,7 +14,7 @@ public:
 	void Play();
 
 private:
-	vector<std::unique_ptr<Player>> _vecpopl;
+	std::vector<std::unique_ptr<Player>> _vecpopl;
 	int _iposplDealer = rand() % 4;
 	GameView _gmvw;
 

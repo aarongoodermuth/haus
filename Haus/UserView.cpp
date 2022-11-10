@@ -4,7 +4,6 @@
 #include "Player.h"
 #include "Util.h"
 
-using namespace std;
 
 UserView::UserView(User* pusr, GameView* gmvw) : _pgmvw(gmvw)
 {
@@ -23,18 +22,18 @@ void UserView::Show(std::optional<Suit> optsuit)
 
 	if (*_pbc != BetChoice::PASS)
 	{
-		cout << "Your Bet: " << EnumCast(*_pbc) << " " << (*_pfForcedToBet ? "Under" : "") << endl
-			<< "Tricks Won: " << *_pcTricksWon<< endl;
+		std::cout << "Your Bet: " << EnumCast(*_pbc) << " " << (*_pfForcedToBet ? "Under" : "") << std::endl
+			<< "Tricks Won: " << *_pcTricksWon<< std::endl;
 	}
 
-	cout << "Your Hand: ";
+	std::cout << "Your Hand: ";
 	for (size_t icrd = 0; icrd < _pveccrdHand->size(); icrd++)
-		cout << to_string(icrd+1) << ". " << _pveccrdHand->at(icrd).StrAscii() << "   ";
-	cout << endl;
+		std::cout << std::to_string(icrd+1) << ". " << _pveccrdHand->at(icrd).StrAscii() << "   ";
+	std::cout << std::endl;
 }
 
 
 void UserView::ClearScreen()
 {
-	cout << string(100, '\n');
+	std::cout << std::string(100, '\n');
 }

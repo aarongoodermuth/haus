@@ -4,7 +4,6 @@
 #include "UserController.h"
 #include "Util.h"
 
-using namespace std;
 
 UserController::UserController(User *pusr) : Controller(static_cast<Player *>(pusr))
 {
@@ -20,17 +19,17 @@ BetChoice UserController::BcRequestDesiredBet()
 	do
 	{
 		if (fHitOnce)
-			cout << "\n\nINVALID CHOICE\n";
+			std::cout << "\n\nINVALID CHOICE\n";
 
 		_pusrvw->Show(std::nullopt); // no suit has been chosen yet
-		cout << "\nPlace a bet\nBet Choices:" << endl;
+		std::cout << "\nPlace a bet\nBet Choices:" << std::endl;
 
 		for (int ibci = 0; ibci < sizeof(Player::c_rgbci); ibci++)
 		{
-			cout << ibci + 1 << ". " << Player::c_rgbci[ibci].sz << endl;
+			std::cout << ibci + 1 << ". " << Player::c_rgbci[ibci].sz << std::endl;
 		}
 
-		cin >> bc;
+		std::cin >> bc;
 	} while (!fnValidBc(bc));
 
 	ClearScreen();
@@ -45,13 +44,13 @@ unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)
 	while (icrd < 1 || icrd > _ppl->_veccrdHand.size())
 	{
 		if (fHitOnce)
-			cout << "\n\nINVALID CHOICE\n";
+			std::cout << "\n\nINVALID CHOICE\n";
 		fHitOnce = true;
 
 		_pusrvw->Show(std::nullopt /*TODO*/);
-		cout << "\nPlay a card\n" << endl;
+		std::cout << "\nPlay a card\n" << std::endl;
 
-		cin >> icrd;
+		std::cin >> icrd;
 	}
 	ClearScreen();
 	return icrd - 1;
@@ -75,7 +74,7 @@ void UserController::ClearScreen()
 // TODO: this is bad object design. But then again, this whole class is.
 void UserController::WaitForUserAcknowledgement()
 {
-	cout << "Press any key to continue...";
-	cin.ignore().get();
+	std::cout << "Press any key to continue...";
+	std::cin.ignore().get();
 	ClearScreen();
 }

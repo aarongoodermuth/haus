@@ -121,7 +121,7 @@ Card User::CrdPlay(Card* pcrdLead)
 	do
 	{
 		if (!fFirstAsk)
-			std::cout << endl << "That is not a legal card" << endl;
+			std::cout << std::endl << "That is not a legal card" << std::endl;
 		icrd = _pousrcnt->IcrdRequestCrdPlay(pcrdLead);
 		crdRet = _veccrdHand[icrd];
 		fFirstAsk = false;

@@ -26,8 +26,8 @@ private:
 	int* _pcBumps;
 	int* _pnScore;
 	bool* _pfForcedToBet;
-	string* _pstrName;
-	vector<Card>* _pveccrdHand;
+	std::string* _pstrName;
+	std::vector<Card>* _pveccrdHand;
 
 	void ClearScreen();
 };

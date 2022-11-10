@@ -29,6 +29,8 @@ public:
 	void DoScoring();
 	bool FIsWinner();
 
+	void AttachGameView(GameView* pgmvw);
+
 	// quick and dirty
 	inline void TakeTrick(){ _cTricksWon++; }
 
@@ -47,6 +49,7 @@ protected:
 	bool _fForcedToBet = false;
 	std::string _strName;
 	std::vector<Card> _veccrdHand;
+	GameView* _pgmvw;
 
 	static const int c_cBetChoices = (int)BetChoice::cbc;
 	static constexpr const std::array<BetChoiceInfo, 6> c_rgbci = {

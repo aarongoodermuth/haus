@@ -58,6 +58,11 @@ void Player::Init()
 	ResetRound();
 }
 
+void Player::AttachGameView(GameView *pgmvw)
+{
+	_pgmvw = pgmvw;
+}
+
 
 /*********************/
 /*  C O M P U T E R  */

@@ -5,7 +5,9 @@
 #include "Util.h"
 
 
-UserController::UserController(User *pusr) : Controller(static_cast<Player *>(pusr))
+UserController::UserController(User *pusr)
+	: Controller(static_cast<Player *>(pusr))
+	, _pousrvw(std::make_unique<UserView>(pusr, _pogameview.get()))
 {
 }
 
@@ -21,10 +23,10 @@ BetChoice UserController::BcRequestDesiredBet()
 		if (fHitOnce)
 			std::cout << "\n\nINVALID CHOICE\n";
 
-		_pusrvw->Show(std::nullopt); // no suit has been chosen yet
+		_pousrvw->Show(std::nullopt); // no suit has been chosen yet
 		std::cout << "\nPlace a bet\nBet Choices:" << std::endl;
 
-		for (int ibci = 0; ibci < sizeof(Player::c_rgbci); ibci++)
+		for (int ibci = 0; ibci < sizeof(Player::c_rgbci) / sizeof(BetChoiceInfo); ibci++)
 		{
 			std::cout << ibci + 1 << ". " << Player::c_rgbci[ibci].sz << std::endl;
 		}
@@ -47,7 +49,7 @@ unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)
 			std::cout << "\n\nINVALID CHOICE\n";
 		fHitOnce = true;
 
-		_pusrvw->Show(std::nullopt /*TODO*/);
+		_pousrvw->Show(std::nullopt /*TODO*/);
 		std::cout << "\nPlay a card\n" << std::endl;
 
 		std::cin >> icrd;

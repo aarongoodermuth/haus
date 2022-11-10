@@ -3,6 +3,7 @@
 
 #include "Bet.h"
 #include "UserView.h"
+#include <memory>
 
 // forward declaration
 class User;
@@ -16,7 +17,8 @@ public:
 	unsigned int IcrdRequestCrdPlay(const Card *pcrdLead) override;
 
 private:
-	UserView *_pusrvw;
+	std::unique_ptr<GameView> _pogameview = std::make_unique<GameView>();
+	std::unique_ptr<UserView> _pousrvw;
 
 public:
 	static void ClearScreen();

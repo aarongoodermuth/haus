@@ -5,9 +5,9 @@
 #include "Util.h"
 
 
-UserController::UserController(User *pusr)
+UserController::UserController(User *pusr, GameView* pgmvw)
 	: Controller(static_cast<Player *>(pusr))
-	, _pousrvw(std::make_unique<UserView>(pusr, _pogameview.get()))
+	, _pousrvw(std::make_unique<UserView>(pusr, pgmvw))
 {
 }
 

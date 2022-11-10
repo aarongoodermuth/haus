@@ -93,13 +93,13 @@ class User : public Player
 	friend class UserController;
 
 public:
-	User();
+	User(GameView* pgmvw);
 
 	BetChoice BcRequestDesiredBet() override;
 	Card CrdPlay(Card* pcrdLead) override;
 	Suit SuitChooseTrump() override;
 
 protected:
-	std::unique_ptr<UserController> _pousrcnt = std::make_unique<UserController>(this);
+	std::unique_ptr<UserController> _pousrcnt;
 	std::unique_ptr<View> _pousrvw = std::make_unique<NoView>();
 };

@@ -11,13 +11,12 @@ class User;
 class UserController : protected Controller
 {
 public:
-	UserController(User* pusr);
+	UserController(User* pusr, GameView* pgmvw);
 	
 	BetChoice BcRequestDesiredBet() override;
 	unsigned int IcrdRequestCrdPlay(const Card *pcrdLead) override;
 
 private:
-	std::unique_ptr<GameView> _pogameview = std::make_unique<GameView>();
 	std::unique_ptr<UserView> _pousrvw;
 
 public:

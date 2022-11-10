@@ -106,7 +106,8 @@ Suit Computer::SuitChooseTrump()
 /*************/
 /*  U S E R  */
 /*************/
-User::User()
+User::User(GameView* pgmvw)
+	: _pousrcnt(std::make_unique<UserController>(this, pgmvw))
 {
 	_strName = "You";
 	Init();

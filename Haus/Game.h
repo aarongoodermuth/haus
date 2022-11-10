@@ -9,14 +9,14 @@
 class Game
 {
 public:
-	Game(std::vector<std::unique_ptr<Player>> &&vecpopl);
+	Game(std::vector<std::unique_ptr<Player>> &&vecpopl, GameView* pgmvw);
 
 	void Play();
 
 private:
 	std::vector<std::unique_ptr<Player>> _vecpopl;
 	int _iposplDealer = rand() % 4;
-	GameView _gmvw;
+	GameView* _pgmvw;
 
 
 	void DoRound();

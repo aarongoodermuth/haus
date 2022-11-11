@@ -12,7 +12,8 @@ Game::Game(std::vector<std::unique_ptr<Player>> &&vecpopl, GameView *pgmvw)
 
 	_vecpopl.reserve(Rules::cpl);
 	std::ranges::move(vecpopl, std::back_inserter(_vecpopl));
-	std::generate_n(std::inserter(_vecpopl, _vecpopl.end()), Rules::cpl - 1, []() { return std::make_unique<Computer>(0); });
+	int ipl = 0;
+	std::generate_n(std::inserter(_vecpopl, _vecpopl.end()), Rules::cpl - 1, [&ipl]() { return std::make_unique<Computer>(ipl++); });
 	std::ranges::for_each(_vecpopl, [this](auto &popl){ popl->AttachGameView(_pgmvw);});
 }
 

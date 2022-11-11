@@ -8,9 +8,9 @@
 
 std::string Card::StrAscii() const
 {
-	std::string asdf = _mpvalstr[EnumCast(val)];
-	asdf.push_back(ChFromSuit(suit));
-	return asdf;
+	std::string strRet = _mpvalstr[EnumCast(val)];
+	strRet.push_back(ChFromSuit(suit));
+	return strRet;
 }
 
 

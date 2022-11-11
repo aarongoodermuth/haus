@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <vector>
 #include <string>
 #include "Util.h"
@@ -29,19 +29,11 @@ enum class Value : int
 
 
 constexpr static const char* _mpvalstr[EnumCast(Value::valLim)] = { "9", "10", "J", "Q", "K", "A" };
-#ifdef _WIN32
-constexpr static const char _mpsuitstr[EnumCast(Suit::suitLim)] = { 'H' /*heart*/, 'D' /*diamond*/, 'C' /*club*/, 'S' /*spade*/ };
-#else
-#ifdef __linux
-constexpr static const string _mpsuitstr[(int)Suit::suitLim] = { "\u2665" /*heart*/, "\u2666" /*diamond*/, "\u2663" /*club*/, "\u2660" /*spade*/ };
-#else
-#error "What platform are we on"
-#endif // __linux
-#endif // _WIN32
+constexpr static const char _mpsuitch[(int)Suit::suitLim] = { '\5' /*heart*/, '\4' /*diamond*/, '\3' /*club*/, '\6' /*spade*/ };
 
 constexpr char ChFromSuit(Suit suit)
 {
-	return _mpsuitstr[EnumCast(suit)];
+	return _mpsuitch[EnumCast(suit)];
 }
 
 

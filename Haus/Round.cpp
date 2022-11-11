@@ -7,6 +7,7 @@
 #include "Game.h"
 #include "Player.h"
 #include "Rules.h"
+#include <algorithm>
 
 
 Round::Round(std::vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
@@ -119,7 +120,14 @@ void Round::DoScoring()
 void Round::ShowRoundSummary()
 {
 	UserController::ClearScreen();
-	for (auto &popl : _vecpopl)
-		std::cout << popl->StrName() << ": " << popl->CTricksWon() << " tricks Won.\n";
+	const auto fnDisplayPlayer = [](const auto& popl)
+	{
+		std::cout
+			<< popl->StrName() << ": "
+			<< popl->CTricksWon() << " tricks Won. Total Points: " \
+			<< popl->NScore() << '\n';
+	};
+	
+	std::ranges::for_each(_vecpopl, fnDisplayPlayer);
 	UserController::WaitForUserAcknowledgement();
 }

@@ -15,6 +15,7 @@ public:
 	
 	BetChoice BcRequestDesiredBet() override;
 	unsigned int IcrdRequestCrdPlay(const Card *pcrdLead) override;
+	Suit SuitChooseTrump() override;
 
 private:
 	std::unique_ptr<UserView> _pousrvw;

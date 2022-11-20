@@ -82,7 +82,7 @@ void Round::DoBet()
 
 void Round::PlayTricks()
 {
-	this->_optsuitTrump = _vecpopl[_iposplDealer]->SuitChooseTrump();
+	_optsuitTrump = _vecpopl[_iposplDealer]->SuitChooseTrump();
 
 	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
 	{

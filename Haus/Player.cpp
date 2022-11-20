@@ -142,9 +142,7 @@ Card User::CrdPlay(Card* pcrdLead)
 
 Suit User::SuitChooseTrump()
 {
-	// TODO
-	int iposcrd = 0;
-	return _veccrdHand[iposcrd].suit;
+	return _pousrcnt->SuitChooseTrump();
 }
 
 

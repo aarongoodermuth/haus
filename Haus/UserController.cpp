@@ -16,9 +16,8 @@ BetChoice UserController::BcRequestDesiredBet()
 	char chBetChoice;
 	bool fHitOnce = false;
 
-	auto fnFBetween = [](auto val, auto low, auto high) noexcept { return val >= low && val <= high; };
-	auto fnFValidBc = [&](BetChoice bc) noexcept { return fnFBetween(bc, BetChoice::bcFirst, BetChoice::bcMac); };
-	auto fnFValidCh = [&](char chBetChoice) noexcept { return fnFBetween(chBetChoice, '1', '1' + sizeof(BetChoiceInfo)); };
+	auto fnFValidBc = [&](BetChoice bc) noexcept { return FBetween(bc, BetChoice::bcFirst, BetChoice::bcMac); };
+	auto fnFValidCh = [&](char chBetChoice) noexcept { return FBetween(chBetChoice, '1', static_cast<char>('1' + sizeof(BetChoiceInfo))); };
 	auto fnBcFromCh = [](char ch) noexcept -> BetChoice { return static_cast<BetChoice>(ch - '1'); };
 
 	do
@@ -61,6 +60,35 @@ unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)
 	}
 	return icrd - 1;
 }
+
+
+Suit UserController::SuitChooseTrump()
+{
+
+	//TODO: This function shares a lot of similarities with UserController::BcRequestDesiredBet. It should be templatized.
+	auto fnFValidSuit = [&](Suit suit) noexcept { return FBetween(suit, Suit::suitFirst, Suit::suitLim); };
+	auto fnFValidCh = [&](char chSuit) noexcept { return FBetween(chSuit, '1', static_cast<char>('0' + sizeof(Suit::suitLim))); };
+	auto fnSuitFromCh = [](char ch) noexcept -> Suit { return static_cast<Suit>(ch - '1'); };
+
+
+	_pousrvw->Show();
+	std::cout << "\n\n";
+	std::cout << "Choose Trump Suit\n";
+	std::cout	<< "1. Heart\n"
+				<< "2. Diamond\n"
+				<< "3. Club\n"
+				<< "4. Spade\n";
+	// TODO: get string from enum value rather than re-encode the ordinality.
+
+	char chTrumpSuit;
+	do
+	{
+		std::cin >> chTrumpSuit;
+	} while (!fnFValidCh(chTrumpSuit) || !fnFValidSuit(fnSuitFromCh(chTrumpSuit)));
+	ClearScreen();
+	return fnSuitFromCh(chTrumpSuit);
+}
+
 
 // TODO: this is bad object design. But then again, this whole class is.
 void UserController::ClearScreen()

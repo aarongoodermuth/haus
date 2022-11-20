@@ -59,7 +59,6 @@ unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)
 
 		std::cin >> icrd;
 	}
-	ClearScreen();
 	return icrd - 1;
 }
 

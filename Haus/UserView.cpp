@@ -32,6 +32,11 @@ void UserView::Show()
 	std::cout << std::endl;
 }
 
+void UserView::ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound)
+{
+	std::cout << strWinnerName << " won with the card " << crdHighestOfRound.StrAscii() << '\n';
+}
+
 
 void UserView::ClearScreen()
 {

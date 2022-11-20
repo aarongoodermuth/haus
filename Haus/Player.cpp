@@ -50,6 +50,7 @@ bool Player::FIsWinner()
 	return _nScore >= 31; // TODO: refactor: duh!
 }
 
+
 void Player::Init()
 {
 	_nScore = 0;
@@ -108,6 +109,7 @@ Suit Computer::SuitChooseTrump()
 /*************/
 User::User(GameView* pgmvw)
 	: _pousrcnt(std::make_unique<UserController>(this, pgmvw))
+	, _pousrvw(std::make_unique<UserView>(this, pgmvw))
 {
 	_strName = "You";
 	Init();
@@ -143,4 +145,13 @@ Suit User::SuitChooseTrump()
 	// TODO
 	int iposcrd = 0;
 	return _veccrdHand[iposcrd].suit;
+}
+
+
+void User::ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound)
+{
+	_pousrcnt->ClearScreen();
+	_pousrvw->Show();
+	_pousrvw->ShowTurnSummary(strWinnerName, crdHighestOfRound);
+	_pousrcnt->WaitForUserAcknowledgement();
 }

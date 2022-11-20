@@ -28,6 +28,7 @@ public:
 	void TakeCard(const Card &crd);
 	void DoScoring();
 	bool FIsWinner();
+	virtual void ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound) = 0;
 
 	void AttachGameView(GameView* pgmvw);
 
@@ -78,6 +79,7 @@ public:
 	BetChoice BcRequestDesiredBet() override;
 	Card CrdPlay(Card* pcrdLead) override;
 	Suit SuitChooseTrump() override;
+	void ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound) override {}
 
 private:
 	static constexpr const std::array<const char*, 4> c_rgszNames = { "Bender", "Karen", "Jarvis", "HAL" };
@@ -98,8 +100,9 @@ public:
 	BetChoice BcRequestDesiredBet() override;
 	Card CrdPlay(Card* pcrdLead) override;
 	Suit SuitChooseTrump() override;
+	void ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound) override;
 
 protected:
 	std::unique_ptr<UserController> _pousrcnt;
-	std::unique_ptr<View> _pousrvw = std::make_unique<NoView>();
+	std::unique_ptr<UserView> _pousrvw;
 };

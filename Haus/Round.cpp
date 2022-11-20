@@ -89,6 +89,8 @@ void Round::PlayTricks()
 		int iposplHighestCard = _iposplStartTrick;
 		Card crdLead = _vecpopl[_iposplStartTrick]->CrdPlay(nullptr);
 		Card crdHighest = crdLead;
+		_veccrdPlayed.push_back(crdLead);
+		_veccrdPlayedThisTurn.push_back(crdLead);
 		for (int i = 1; i < Rules::cpl; i++)
 		{
 			int ipospl = (_iposplStartTrick + i) % Rules::cpl;
@@ -105,6 +107,11 @@ void Round::PlayTricks()
 		}
 		_vecpopl[iposplHighestCard]->TakeTrick();
 		_iposplStartTrick = iposplHighestCard;
+		
+		std::ranges::for_each(_vecpopl, [&](const std::unique_ptr<Player> &popl) noexcept { popl->ShowTurnSummary(
+			_vecpopl[iposplHighestCard]->StrName(),
+			crdHighest); });
+
 
 		_veccrdPlayedThisTurn.clear();
 	}

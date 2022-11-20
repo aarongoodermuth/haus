@@ -17,6 +17,7 @@ public:
 	UserView(User* pusr, GameView* gmvw);
 
 	void Show() override;
+	void ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound);
 
 private:
 	GameView* _pgmvw;

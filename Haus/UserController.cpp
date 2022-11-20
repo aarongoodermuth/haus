@@ -13,15 +13,19 @@ UserController::UserController(User *pusr, GameView* pgmvw)
 
 BetChoice UserController::BcRequestDesiredBet()
 {
-	int bc;
+	char chBetChoice;
 	bool fHitOnce = false;
 
-	auto fnValidBc = [](int bc) noexcept { return bc > EnumCast(BetChoice::bcFirst) && bc < EnumCast(BetChoice::bcMac); };
+	auto fnFBetween = [](auto val, auto low, auto high) noexcept { return val >= low && val <= high; };
+	auto fnFValidBc = [&](BetChoice bc) noexcept { return fnFBetween(bc, BetChoice::bcFirst, BetChoice::bcMac); };
+	auto fnFValidCh = [&](char chBetChoice) noexcept { return fnFBetween(chBetChoice, '1', '1' + sizeof(BetChoiceInfo)); };
+	auto fnBcFromCh = [](char ch) noexcept -> BetChoice { return static_cast<BetChoice>(ch - '1'); };
 
 	do
 	{
 		if (fHitOnce)
 			std::cout << "\n\nINVALID CHOICE\n";
+		fHitOnce = true;
 
 		_pousrvw->Show();
 		std::cout << "\nPlace a bet\nBet Choices:" << std::endl;
@@ -31,11 +35,12 @@ BetChoice UserController::BcRequestDesiredBet()
 			std::cout << ibci + 1 << ". " << Player::c_rgbci[ibci].sz << std::endl;
 		}
 
-		std::cin >> bc;
-	} while (!fnValidBc(bc));
+		std::cin >> chBetChoice;
+
+	} while (!fnFValidCh(chBetChoice) || !fnFValidBc(fnBcFromCh(chBetChoice)));
 
 	ClearScreen();
-	return static_cast<BetChoice>(bc - 1);
+	return static_cast<BetChoice>(chBetChoice - '0');
 }
 
 unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)

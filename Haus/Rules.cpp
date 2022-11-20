@@ -86,7 +86,7 @@ bool Rules::FLeftBar(Card crd, Suit suitTrump)
 	if (crd.val != Value::JACK)
 		return false;
 
-	switch (crd.suit)
+	switch (suitTrump)
 	{
 	case Suit::CLUB:
 		return crd.suit == Suit::SPADE;

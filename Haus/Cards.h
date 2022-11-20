@@ -29,7 +29,7 @@ enum class Value : int
 
 
 constexpr static const char* _mpvalstr[EnumCast(Value::valLim)] = { "9", "10", "J", "Q", "K", "A" };
-constexpr static const char _mpsuitch[(int)Suit::suitLim] = { '\5' /*heart*/, '\4' /*diamond*/, '\3' /*club*/, '\6' /*spade*/ };
+constexpr static const char _mpsuitch[(int)Suit::suitLim] = { '\3' /*heart*/, '\4' /*diamond*/, '\5' /*club*/, '\6' /*spade*/ };
 
 constexpr char ChFromSuit(Suit suit)
 {

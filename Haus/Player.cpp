@@ -34,7 +34,7 @@ void Player::DoScoring()
 	const BetChoiceInfo &bciRoundBet = c_rgbci[EnumCast(_bc)];
 	if (_cTricksWon >= bciRoundBet.nRequiredTricks)
 	{
-		_nScore += _cTricksWon;
+		_nScore += std::max(_cTricksWon, bciRoundBet.nBetAmount);
 	}
 	else
 	{

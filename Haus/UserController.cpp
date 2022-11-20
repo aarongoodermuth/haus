@@ -39,7 +39,7 @@ BetChoice UserController::BcRequestDesiredBet()
 	} while (!fnFValidCh(chBetChoice) || !fnFValidBc(fnBcFromCh(chBetChoice)));
 
 	ClearScreen();
-	return static_cast<BetChoice>(chBetChoice - '0');
+	return static_cast<BetChoice>(chBetChoice - '1');
 }
 
 unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)

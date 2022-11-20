@@ -31,14 +31,14 @@ void Player::TakeCard(const Card &crd)
 
 void Player::DoScoring()
 {
-	int nRoundBet = c_rgbci[EnumCast(_bc)].nRequiredTricks;
-	if (_cTricksWon >= nRoundBet)
+	const BetChoiceInfo &bciRoundBet = c_rgbci[EnumCast(_bc)];
+	if (_cTricksWon >= bciRoundBet.nRequiredTricks)
 	{
 		_nScore += _cTricksWon;
 	}
 	else
 	{
-		_nScore -= nRoundBet;
+		_nScore -= bciRoundBet.nBetAmount;
 		_cBumps++;
 		if (_fForcedToBet)
 			_cBumps++;

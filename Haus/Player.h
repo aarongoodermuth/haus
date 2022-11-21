@@ -39,6 +39,8 @@ public:
 	inline int NScore(){ return _nScore; }
 	inline std::string StrName() { return _strName; }
 	inline int CTricksWon() { return _cTricksWon; }
+	inline bool FIsUnder() { return _fForcedToBet; }
+	inline const char* SzBetChoice() { return c_rgbci[EnumCast(_bc)].sz; }
 
 protected:
 	void Init();

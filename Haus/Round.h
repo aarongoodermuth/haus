@@ -20,7 +20,7 @@ private:
 	std::vector<Card> _veccrdPlayedThisTurn;
 	Deck _dck;
 	int _iposplDealer;
-	int _iposplStartTrick;
+	int _iposplBid;
 	RoundView _rndvw;
 	std::optional<Suit> _optsuitTrump;
 

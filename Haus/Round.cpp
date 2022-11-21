@@ -15,7 +15,7 @@ Round::Round(std::vector<std::unique_ptr<Player>>& vecpopl, int iposplDealer)
 	, _vecpopl(vecpopl)
 {
 	_iposplDealer = iposplDealer;
-	_iposplStartTrick = (_iposplDealer + 1) % Rules::cpl;
+	_iposplBid = (_iposplDealer + 1) % Rules::cpl;
 }
 
 
@@ -76,24 +76,25 @@ void Round::DoBet()
 
 	// now we know who will have to bet
 	_vecpopl[iposCurHighBidder]->ForceBet(bcCurHighestBid, fForcedToTake);
-	_iposplStartTrick = iposCurHighBidder;
+	_iposplBid = iposCurHighBidder;
 }
 
 
 void Round::PlayTricks()
 {
-	_optsuitTrump = _vecpopl[_iposplStartTrick]->SuitChooseTrump();
+	_optsuitTrump = _vecpopl[_iposplBid]->SuitChooseTrump();
+	int iposplStartTrick = _iposplBid;
 
 	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
 	{
-		int iposplHighestCard = _iposplStartTrick;
-		Card crdLead = _vecpopl[_iposplStartTrick]->CrdPlay(nullptr);
+		int iposplHighestCard = iposplStartTrick;
+		Card crdLead = _vecpopl[iposplStartTrick]->CrdPlay(nullptr);
 		Card crdHighest = crdLead;
 		_veccrdPlayed.push_back(crdLead);
 		_veccrdPlayedThisTurn.push_back(crdLead);
 		for (int i = 1; i < Rules::cpl; i++)
 		{
-			int ipospl = (_iposplStartTrick + i) % Rules::cpl;
+			int ipospl = (iposplStartTrick + i) % Rules::cpl;
 			assert(ipospl >= 0 && ipospl < Rules::cpl);
 			Card crdPlayed = _vecpopl[ipospl]->CrdPlay(&crdLead);
 			_veccrdPlayedThisTurn.push_back(crdPlayed);
@@ -106,7 +107,7 @@ void Round::PlayTricks()
 			}
 		}
 		_vecpopl[iposplHighestCard]->TakeTrick();
-		_iposplStartTrick = iposplHighestCard;
+		iposplStartTrick = iposplHighestCard;
 		
 		std::ranges::for_each(_vecpopl, [&](const std::unique_ptr<Player> &popl) noexcept { popl->ShowTurnSummary(
 			_vecpopl[iposplHighestCard]->StrName(),
@@ -127,6 +128,16 @@ void Round::DoScoring()
 void Round::ShowRoundSummary()
 {
 	UserController::ClearScreen();
+
+	const auto &plBid = _vecpopl[_iposplBid];
+	std::cout 
+		<< plBid->StrName()
+		<< (plBid->FIsUnder() ? " was under for " : " bid ")
+		<< plBid->SzBetChoice()
+		<< " and made "
+		<< plBid->CTricksWon()
+		<< '\n';
+
 	const auto fnDisplayPlayer = [](const auto& popl)
 	{
 		std::cout

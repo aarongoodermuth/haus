@@ -56,15 +56,13 @@ void Round::DoBet()
 {
 	BetChoice bcCurHighestBid = BetChoice::DEFAULT_DEALER;
 	int iposCurHighBidder = _iposplDealer;
-	BetChoice bcCurBet;
-	int ipos;
 	bool fForcedToTake = true;
 
 	for (int i = 0; i < Rules::cpl; i++)
 	{
-		ipos = (i + _iposplDealer) % Rules::cpl;
+		int ipos = (i + _iposplDealer) % Rules::cpl;
 		assert(ipos < Rules::cpl && ipos >= 0);
-		bcCurBet = _vecpopl[ipos]->BcRequestDesiredBet();
+		BetChoice bcCurBet = _vecpopl[ipos]->BcRequestDesiredBet();
 		if (bcCurBet > bcCurHighestBid)
 		{
 			bcCurHighestBid = bcCurBet;

@@ -32,8 +32,7 @@ void Round::Do()
 void Round::ResetRound()
 {
 	_dck = {};
-	for (auto &popl : _vecpopl)
-		popl->ResetRound();
+	std::ranges::for_each(_vecpopl, [](auto &popl) {popl->ResetRound();});
 }
 
 RoundView* Round::PrndvwGet()

@@ -142,7 +142,6 @@ if (typeof document !== "undefined") {
       : "Bidding / dealing";
     state.players.forEach((p, i) => {
       $("name-" + i).textContent = (state.trickWinner === i && state.plays.length === 4 ? "🏆 " : "") + p.name;
-      $("count-" + i).textContent = p.hand.length + " cards";
       const slot = $("played-" + i); slot.innerHTML = "";
       const play = state.plays.find(x => x.player === i);
       if (play) slot.appendChild(cardEl(play.card, { small: true, winner: state.trickWinner === i && state.plays.length === 4 }));

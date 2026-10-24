@@ -175,38 +175,73 @@ if (typeof document !== "undefined") {
   let handDrag = null;
   function attachHandCard(el, card, canPlay) {
     el.addEventListener("pointerdown", e => {
-      handDrag = { el, card, startX: e.clientX, startY: e.clientY, active: false };
+      handDrag = { el, startX: e.clientX, startY: e.clientY, active: false, grabDX: 0, grabDY: 0, placeholder: null };
       if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (_) {} }
     });
     el.addEventListener("pointermove", e => {
       if (!handDrag || handDrag.el !== el) return;
       const dx = e.clientX - handDrag.startX, dy = e.clientY - handDrag.startY;
-      if (!handDrag.active && Math.hypot(dx, dy) > 10) { handDrag.active = true; el.className += " dragging"; }
-      if (!handDrag.active) return;
-      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      if (!handDrag.active) {
+        if (Math.hypot(dx, dy) <= 10) return;
+        // Lift off: the card leaves the layout and floats, following the pointer
+        // from the exact spot it was grabbed. A placeholder holds its slot and
+        // shows where the drop will land. Only the OTHER cards' positions are
+        // used to place that slot, so it can't jitter the way v1 did.
+        const r = el.getBoundingClientRect();
+        handDrag.active = true;
+        handDrag.grabDX = handDrag.startX - r.left; handDrag.grabDY = handDrag.startY - r.top; // grab point from the original press, so tracking is exact from the first move
+        const ph = document.createElement("div");
+        ph.className = "card placeholder";
+        ph.style.width = r.width + "px"; ph.style.height = r.height + "px";
+        handDrag.placeholder = ph;
+        $("hand").insertBefore(ph, el);
+        el.className += " dragging";
+        el.style.width = r.width + "px"; el.style.height = r.height + "px";
+        el.style.left = r.left + "px"; el.style.top = r.top + "px";
+      }
+      if (e.preventDefault) e.preventDefault();
+      el.style.left = (e.clientX - handDrag.grabDX) + "px";
+      el.style.top = (e.clientY - handDrag.grabDY) + "px";
+      // Work out the insertion index from the pointer against the stationary
+      // slots, scanning in DOM order (which is row-by-row on screen): the
+      // drop slot is before the first card that sits below the pointer, or
+      // shares its row and sits to its right.
       const handEl = $("hand");
-      const sibs = Array.from(handEl.children).filter(x => x !== el);
-      const target = sibs.find(s => { const r = s.getBoundingClientRect(); return e.clientX < r.left + r.width / 2; });
-      handEl.insertBefore(el, target || null);
-    });
-    const commitDrag = () => {
-      const order = Array.from($("hand").children).map(x => x._card);
+      const slots = Array.from(handEl.children).filter(x => x !== el && x !== handDrag.placeholder);
+      let idx = slots.length;
+      for (let i = 0; i < slots.length; i++) {
+        const r = slots[i].getBoundingClientRect();
+        if (e.clientY < r.top) { idx = i; break; }
+        if (e.clientY <= r.bottom && e.clientX < r.left + r.width / 2) { idx = i; break; }
+        idx = i + 1;
+      }
+      const ref = idx < slots.length ? slots[idx] : null;
+      if (ref) handEl.insertBefore(handDrag.placeholder, ref); else handEl.appendChild(handDrag.placeholder);
+    }, { passive: false });
+    const settleDrag = () => {
+      const handEl = $("hand");
+      handEl.insertBefore(el, handDrag.placeholder);
+      handDrag.placeholder.remove();
+      el.className = el.className.replace(" dragging", "");
+      el.style.width = ""; el.style.height = ""; el.style.left = ""; el.style.top = "";
+      const order = Array.from(handEl.children).map(x => x._card);
       if (order.length === state.players[0].hand.length) state.players[0].hand = order;
-      el.style.transform = "";
       handDrag = null;
       render();
     };
     el.addEventListener("pointerup", () => {
       if (!handDrag || handDrag.el !== el) return;
-      if (handDrag.active) return commitDrag();
+      if (handDrag.active) return settleDrag();
       handDrag = null;
       if (canPlay) playHumanCard(card); // it was a tap, not a drag
     });
     el.addEventListener("pointercancel", () => {
       if (!handDrag || handDrag.el !== el) return;
-      if (handDrag.active) commitDrag(); else handDrag = null;
+      if (handDrag.active) settleDrag(); else handDrag = null;
     });
   }
+  // Long-press on a card must not pop a context menu mid-drag.
+  $("hand").addEventListener("contextmenu", e => { if (e.preventDefault) e.preventDefault(); });
   function newGame() {
     state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
     state.dealer = Math.floor(Math.random() * 4);

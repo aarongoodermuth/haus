@@ -29,9 +29,10 @@ main { max-width:640px; margin:0 auto; padding:8px 12px 32px; }
 .card.trump { border-color:var(--accent); }
 button.card { cursor:pointer; touch-action:manipulation; }
 button.card:disabled { opacity:.35; cursor:default; }
-#hand .card { touch-action:pan-y; cursor:grab; }
+#hand .card { touch-action:pan-y; cursor:grab; -webkit-touch-callout:none; }
 #hand .card.disabled { opacity:.35; }
-#hand .card.dragging { cursor:grabbing; position:relative; z-index:5; box-shadow:0 12px 26px rgba(0,0,0,.5); border-color:var(--accent); }
+#hand .card.dragging { cursor:grabbing; position:fixed; margin:0; z-index:50; pointer-events:none; opacity:.94; box-shadow:0 14px 30px rgba(0,0,0,.55); border-color:var(--accent); }
+#hand .card.placeholder { background:rgba(255,201,71,.10); border:2px dashed var(--accent); opacity:.55; }
 button.card:not(:disabled):active { transform:translateY(-4px); }
 .card .sub { font-size:.6rem; font-weight:600; opacity:.65; }
 #message { text-align:center; min-height:1.4em; }

@@ -152,12 +152,60 @@ if (typeof document !== "undefined") {
       ? "Trick: " + state.plays.map(x => `${state.players[x.player].name} ${cardLabel(x.card)}`).join(" · ") +
         (state.trickWinner >= 0 && state.plays.length === 4 ? ` — 🏆 ${state.players[state.trickWinner].name} won the trick` : "")
       : (state.trump ? `${state.players[state.leader].name} to lead` : "Tap “Deal” to start");
-    const handEl = $("hand"); handEl.innerHTML = "";
+    const handEl = $("hand");
+    if (handDrag && handDrag.active) return; // don't rebuild the hand mid-drag (bot timers re-render)
+    handEl.innerHTML = "";
     const me = state.players[0]; if (!me) return;
     const ledCard = state.plays.length ? state.plays[0].card : null;
-    const legal = state.phase === "play" && state.turn === 0 ? legalCards(me.hand, state.trump, ledCard) : [];
-    me.hand.slice().sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value)
-      .forEach(c => handEl.appendChild(cardEl(c, { button: state.phase === "play" && state.turn === 0, disabled: !legal.includes(c) })));
+    const playable = state.phase === "play" && state.turn === 0;
+    const legal = playable ? legalCards(me.hand, state.trump, ledCard) : [];
+    me.hand.forEach(c => {
+      const el = cardEl(c, {});
+      el._card = c;
+      if (playable && !legal.includes(c)) el.className += " disabled";
+      attachHandCard(el, c, playable && legal.includes(c));
+      handEl.appendChild(el);
+    });
+  }
+  // Drag-to-reorder for the player's hand, built on Pointer Events so mouse
+  // and touch share one path. A press that barely moves is a tap (plays the
+  // card when it's your turn); moving past the threshold starts a drag, and
+  // the other cards shift live. The new order is committed to the hand array
+  // on release, so it persists across renders.
+  let handDrag = null;
+  function attachHandCard(el, card, canPlay) {
+    el.addEventListener("pointerdown", e => {
+      handDrag = { el, card, startX: e.clientX, startY: e.clientY, active: false };
+      if (el.setPointerCapture) { try { el.setPointerCapture(e.pointerId); } catch (_) {} }
+    });
+    el.addEventListener("pointermove", e => {
+      if (!handDrag || handDrag.el !== el) return;
+      const dx = e.clientX - handDrag.startX, dy = e.clientY - handDrag.startY;
+      if (!handDrag.active && Math.hypot(dx, dy) > 10) { handDrag.active = true; el.className += " dragging"; }
+      if (!handDrag.active) return;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      const handEl = $("hand");
+      const sibs = Array.from(handEl.children).filter(x => x !== el);
+      const target = sibs.find(s => { const r = s.getBoundingClientRect(); return e.clientX < r.left + r.width / 2; });
+      handEl.insertBefore(el, target || null);
+    });
+    const commitDrag = () => {
+      const order = Array.from($("hand").children).map(x => x._card);
+      if (order.length === state.players[0].hand.length) state.players[0].hand = order;
+      el.style.transform = "";
+      handDrag = null;
+      render();
+    };
+    el.addEventListener("pointerup", () => {
+      if (!handDrag || handDrag.el !== el) return;
+      if (handDrag.active) return commitDrag();
+      handDrag = null;
+      if (canPlay) playHumanCard(card); // it was a tap, not a drag
+    });
+    el.addEventListener("pointercancel", () => {
+      if (!handDrag || handDrag.el !== el) return;
+      if (handDrag.active) commitDrag(); else handDrag = null;
+    });
   }
   function newGame() {
     state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
@@ -168,6 +216,9 @@ if (typeof document !== "undefined") {
     const deck = shuffle(buildDeck());
     state.players.forEach(p => { p.tricks = 0; p.hand = []; });
     for (let r = 0; r < CARDS_PER_PLAYER; r++) for (let i = 0; i < 4; i++) state.players[(state.dealer + 1 + i) % 4].hand.push(deck.pop());
+    // Sort once, here at the deal. From then on the array order IS the display
+    // order, so the player can drag cards into their own order and it sticks.
+    state.players.forEach(p => p.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value));
     state.trump = null; state.plays = []; state.trickWinner = -1; state.bid = BIDS[0]; state.bidder = -1; state.phase = "bid";
     state.bidTurn = state.dealer; state.bidsSeen = 0; // C++ Round::DoBet starts bidding at the dealer
     msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with the dealer.`);

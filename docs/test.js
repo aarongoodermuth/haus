@@ -2,6 +2,17 @@
 const assert = require("assert");
 const G = require("./game.js");
 
+// Regression: trump is null during deal/bidding, and the UI calls the bower
+// helpers for every rendered card. They must return false, never throw —
+// the old isLeftBower crashed rendering on any Jack, which truncated the
+// player's hand on screen and stopped bidding from starting.
+for (const c of G.buildDeck()) {
+  assert.strictEqual(G.isLeftBower(c, null), false);
+  assert.strictEqual(G.isRightBower(c, null), false);
+  assert.strictEqual(G.isTrump(c, null), false);
+  assert.strictEqual(G.effectiveSuit(c, null), c.suit);
+}
+
 // Deck: 24 cards, 9..A in 4 suits
 const deck = G.buildDeck();
 assert.strictEqual(deck.length, 24);

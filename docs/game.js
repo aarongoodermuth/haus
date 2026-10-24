@@ -34,9 +34,14 @@ function shuffle(deck, rng = Math.random) {
   for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [d[i], d[j]] = [d[j], d[i]]; }
   return d;
 }
-function isRightBower(card, trump) { return card.value === 2 && card.suit === trump; }
-function isLeftBower(card, trump) { return card.value === 2 && card.suit === SUIT_BY_ID[trump].sameColor; }
-function isTrump(card, trump) { return card.suit === trump || isLeftBower(card, trump); }
+// Trump is null before bidding finishes (deal / bidding phases), and card
+// rendering calls these helpers for every card — they must not throw then.
+// The old isLeftBower dereferenced SUIT_BY_ID[null].sameColor on any Jack,
+// which crashed render() during the deal, truncating the hand on screen
+// and preventing bidding from ever starting.
+function isRightBower(card, trump) { return !!trump && card.value === 2 && card.suit === trump; }
+function isLeftBower(card, trump) { return !!trump && card.value === 2 && card.suit === SUIT_BY_ID[trump].sameColor; }
+function isTrump(card, trump) { return !!trump && (card.suit === trump || isLeftBower(card, trump)); }
 function effectiveSuit(card, trump) { return isTrump(card, trump) ? trump : card.suit; }
 function cardStrength(card, trump, ledSuit) {
   // Comparable within a trick: trump beats led suit beats off-suit.

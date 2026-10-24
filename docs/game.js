@@ -246,6 +246,8 @@ if (typeof document !== "undefined") {
     state.dealer = Math.floor(Math.random() * 4);
     startHand();
   }
+  function hideMainBtn() { $("main-btn").style.display = "none"; }
+  function showMainBtn() { $("main-btn").style.display = "block"; }
   function startHand() {
     const deck = shuffle(buildDeck());
     state.players.forEach(p => { p.tricks = 0; p.hand = []; });
@@ -256,6 +258,7 @@ if (typeof document !== "undefined") {
     state.trump = null; state.plays = []; state.trickWinner = -1; state.bid = BIDS[0]; state.bidder = -1; state.phase = "bid";
     state.bidTurn = state.dealer; state.bidsSeen = 0; // C++ Round::DoBet starts bidding at the dealer
     msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with the dealer.`);
+    hideMainBtn(); // the Deal button is done its job — it stays out of the way until the hand ends
     render(); nextBid();
   }
   function nextBid() {
@@ -359,6 +362,7 @@ if (typeof document !== "undefined") {
     const winner = top.score >= WIN_SCORE ? top : null;
     msg(`Hand over: ${state.players[bidder].name} bid ${bid.label}, took ${state.players[bidder].tricks} — ${made ? "made it" : "set!"}` +
         (winner ? ` 🏆 ${winner.name} wins the game with ${winner.score}!` : " Tap Next Hand."));
+    showMainBtn();
     $("main-btn").textContent = winner ? "New Game" : "Next Hand";
     $("main-btn").onclick = winner ? newGame : () => { state.dealer = (state.dealer + 1) % 4; startHand(); };
     state.phase = "idle"; render();

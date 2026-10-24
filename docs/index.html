@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<title>Haus — a Hasenpfeffer card game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>🏠 Haus</h1>
+  <p class="tagline">Hasenpfeffer, in your pocket. First to 31 wins.</p>
+  <div id="scoreboard" aria-live="polite"></div>
+  <div id="status"></div>
+</header>
+
+<main>
+  <section id="table" aria-label="Table">
+    <div class="seat seat-north"><div class="seat-name" id="name-2"></div><div class="played" id="played-2"></div><div class="hand-count" id="count-2"></div></div>
+    <div class="seat seat-west"><div class="seat-name" id="name-1"></div><div class="played" id="played-1"></div><div class="hand-count" id="count-1"></div></div>
+    <div class="seat seat-center" id="center-info">Tap “Deal” to start</div>
+    <div class="seat seat-east"><div class="seat-name" id="name-3"></div><div class="played" id="played-3"></div><div class="hand-count" id="count-3"></div></div>
+  </section>
+
+  <section id="panel" aria-label="Actions"></section>
+
+  <section id="hand-wrap" aria-label="Your hand">
+    <h2>Your hand</h2>
+    <div id="hand"></div>
+  </section>
+
+  <p id="message" role="status" aria-live="polite"></p>
+  <button id="main-btn" type="button">Deal</button>
+  <p class="rules-link"><a href="RULES.md">Draft rules &amp; open questions</a> · Rules are a working draft — see RULES.md in the repo.</p>
+</main>
+
+<script src="game.js"></script>
+</body>
+</html>

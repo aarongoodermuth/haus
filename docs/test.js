@@ -2,7 +2,7 @@
 const assert = require("assert");
 const G = require("./game.js");
 
-// Regression: trump is null during deal/bidding, and the UI calls the bower
+// Regression: trump is null during deal/bidding, and the UI calls the bar
 // helpers for every rendered card. They must return false, never throw —
 // the old isLeftBower crashed rendering on any Jack, which truncated the
 // player's hand on screen and stopped bidding from starting.
@@ -18,7 +18,7 @@ const deck = G.buildDeck();
 assert.strictEqual(deck.length, 24);
 assert.strictEqual(new Set(deck.map(c => c.suit + c.value)).size, 24);
 
-// Bowers: hearts trump -> J♥ right, J♦ left, both trump; J♣ is not
+// Bars: hearts trump -> J♥ right, J♦ left, both trump; J♣ is not
 const hearts = "hearts";
 assert.ok(G.isRightBower({ suit: "hearts", value: 2 }, hearts));
 assert.ok(G.isLeftBower({ suit: "diamonds", value: 2 }, hearts));
@@ -26,7 +26,7 @@ assert.ok(G.isTrump({ suit: "diamonds", value: 2 }, hearts));
 assert.ok(!G.isTrump({ suit: "clubs", value: 2 }, hearts));
 assert.strictEqual(G.effectiveSuit({ suit: "diamonds", value: 2 }, hearts), "hearts");
 
-// Trick: left bower beats trump ace; trump 9 beats led ace of another suit
+// Trick: left bar beats trump ace; trump 9 beats led ace of another suit
 let w = G.trickWinner([
   { player: 0, card: { suit: "hearts", value: 5 } },
   { player: 1, card: { suit: "diamonds", value: 2 } },
@@ -38,12 +38,12 @@ w = G.trickWinner([
 ], hearts);
 assert.strictEqual(w, 1);
 
-// Follow suit, judged by EFFECTIVE suit: a bower is always trump.
+// Follow suit, judged by EFFECTIVE suit: a bar is always trump.
 // (This departs from C++ FLegalPlay's printed-suit rule, per Aaron 2026-10-24.)
-// Led trump (hearts): the left bower (J♦) IS trump and must follow it.
+// Led trump (hearts): the left bar (J♦) IS trump and must follow it.
 const hand = [{ suit: "diamonds", value: 2 }, { suit: "clubs", value: 5 }];
 assert.deepStrictEqual(G.legalCards(hand, hearts, { suit: "hearts", value: 3 }), [hand[0]]);
-// Led diamonds: the left bower is hearts (trump), not diamonds, so with no
+// Led diamonds: the left bar is hearts (trump), not diamonds, so with no
 // diamonds in hand anything goes.
 assert.strictEqual(G.legalCards(hand, hearts, { suit: "diamonds", value: 3 }).length, 2);
 // Led a suit you hold -> only that suit; led a suit you don't -> anything.
@@ -55,7 +55,7 @@ assert.strictEqual(G.legalCards(aaronHand, "clubs", { suit: "spades", value: 3 }
 // Same, but holding a real spade too: only the spade follows; J♠ stays a club.
 const withSpade = [{ suit: "spades", value: 2 }, { suit: "spades", value: 0 }];
 assert.deepStrictEqual(G.legalCards(withSpade, "clubs", { suit: "spades", value: 3 }), [withSpade[1]]);
-// Trump led: the left bower must follow trump like any trump card.
+// Trump led: the left bar must follow trump like any trump card.
 assert.deepStrictEqual(G.legalCards(aaronHand, "clubs", { suit: "clubs", value: 3 }), [aaronHand[0]]);
 
 // Scoring (from the C++ build): bidder makes 4 with 5 tricks -> +5; misses 4 -> -4;
@@ -73,7 +73,7 @@ assert.deepStrictEqual(scored(5, "haus"), [-12, 0, 0, 0]);
 
 // Bot play strategy
 const C = (suit, value) => ({ suit, value });
-// Lead: off-suit Ace first, then right bower, then top of longest suit.
+// Lead: off-suit Ace first, then right bar, then top of longest suit.
 assert.deepStrictEqual(G.botPlay([C("hearts", 5), C("hearts", 0), C("spades", 4)], "clubs", []), C("hearts", 5));
 assert.deepStrictEqual(G.botPlay([C("clubs", 2), C("diamonds", 0), C("spades", 1)], "clubs", []), C("clubs", 2));
 assert.deepStrictEqual(G.botPlay([C("hearts", 3), C("hearts", 0), C("spades", 4)], "clubs", []), C("hearts", 3));
@@ -90,7 +90,7 @@ assert.deepStrictEqual(
   G.botPlay([C("clubs", 2), C("hearts", 0)], "clubs",
     [{ player: 0, card: C("diamonds", 0) }, { player: 1, card: C("diamonds", 1) }]),
   C("hearts", 0));
-// Same, but last to act -> take it with the bower.
+// Same, but last to act -> take it with the bar.
 assert.deepStrictEqual(
   G.botPlay([C("clubs", 2), C("hearts", 0)], "clubs",
     [{ player: 0, card: C("diamonds", 0) }, { player: 1, card: C("diamonds", 1) }, { player: 3, card: C("diamonds", 3) }]),
@@ -100,10 +100,19 @@ assert.deepStrictEqual(
   G.botPlay([C("clubs", 2), C("hearts", 0)], "clubs",
     [{ player: 0, card: C("diamonds", 5) }], { self: 2, bidder: 0 }),
   C("clubs", 2));
-// Must follow trump with only trump in hand -> take the trick with the bower.
+// Must follow trump with only trump in hand -> take the trick with the bar.
 assert.deepStrictEqual(
   G.botPlay([C("clubs", 2), C("clubs", 1)], "clubs", [{ player: 0, card: C("clubs", 3) }]),
   C("clubs", 2));
+// Bots must follow trump with a bar, not shed off-suit:
+// (a) left bar led (hearts trump) with the right bar in hand -> play the bar.
+assert.deepStrictEqual(
+  G.botPlay([C("hearts", 2), C("spades", 0)], "hearts", [{ player: 0, card: C("diamonds", 2) }]),
+  C("hearts", 2));
+// (b) plain trump led (hearts) with only the left bar as trump -> play the bar.
+assert.deepStrictEqual(
+  G.botPlay([C("diamonds", 2), C("spades", 0)], "hearts", [{ player: 0, card: C("hearts", 3) }]),
+  C("diamonds", 2));
 
 // Full random games: every hand ends, tricks always total 6, someone reaches 31
 for (let game = 0; game < 200; game++) {

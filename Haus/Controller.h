@@ -11,7 +11,7 @@ class Controller
 public:
 	Controller(Player* ppl) : _ppl(ppl) {}
 	virtual BetChoice BcRequestDesiredBet() = 0;
-	virtual unsigned int IcrdRequestCrdPlay(const Card* pcrdLead) = 0;
+	virtual unsigned int IcrdRequestCrdPlay(const Card* pcrdLead, Suit suitTrump) = 0;
 	virtual Suit SuitChooseTrump() = 0;
 
 protected:
@@ -23,5 +23,5 @@ class BrainlessController : protected Controller
 {
 	BrainlessController(Player* ppl) : Controller(ppl) {}
 	BetChoice BcRequestDesiredBet() override;
-	unsigned int IcrdRequestCrdPlay(const Card* pcrdLead) override;
+	unsigned int IcrdRequestCrdPlay(const Card* pcrdLead, Suit suitTrump) override;
 };

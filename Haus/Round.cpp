@@ -85,7 +85,7 @@ void Round::PlayTricks()
 	for (int itrk = 0; itrk < Rules::ccrdsPerPl; itrk++)
 	{
 		int iposplHighestCard = iposplStartTrick;
-		Card crdLead = _vecpopl[iposplStartTrick]->CrdPlay(nullptr);
+		Card crdLead = _vecpopl[iposplStartTrick]->CrdPlay(nullptr, *_optsuitTrump);
 		Card crdHighest = crdLead;
 		_veccrdPlayed.push_back(crdLead);
 		_veccrdPlayedThisTurn.push_back(crdLead);
@@ -93,7 +93,7 @@ void Round::PlayTricks()
 		{
 			int ipospl = (iposplStartTrick + i) % Rules::cpl;
 			assert(ipospl >= 0 && ipospl < Rules::cpl);
-			Card crdPlayed = _vecpopl[ipospl]->CrdPlay(&crdLead);
+		Card crdPlayed = _vecpopl[ipospl]->CrdPlay(&crdLead, *_optsuitTrump);
 			_veccrdPlayedThisTurn.push_back(crdPlayed);
 			_veccrdPlayed.push_back(crdPlayed);
 

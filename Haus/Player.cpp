@@ -82,7 +82,7 @@ BetChoice Computer::BcRequestDesiredBet()
 }
 
 
-Card Computer::CrdPlay(Card* pcrdLead)
+Card Computer::CrdPlay(Card* pcrdLead, Suit suitTrump)
 {
 	// TODO
 	int iposcrd = -1;
@@ -90,7 +90,7 @@ Card Computer::CrdPlay(Card* pcrdLead)
 	do
 	{
 		crdRet = _veccrdHand[++iposcrd];
-	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead));
+	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead, suitTrump));
 	_veccrdHand.erase(_veccrdHand.begin() + iposcrd);
 	return crdRet;
 }
@@ -120,7 +120,7 @@ BetChoice User::BcRequestDesiredBet()
 	return _pousrcnt->BcRequestDesiredBet();
 }
 
-Card User::CrdPlay(Card* pcrdLead)
+Card User::CrdPlay(Card* pcrdLead, Suit suitTrump)
 {
 	bool fFirstAsk = true;
 	Card crdRet;
@@ -130,10 +130,10 @@ Card User::CrdPlay(Card* pcrdLead)
 	{
 		if (!fFirstAsk)
 			std::cout << std::endl << "That is not a legal card" << std::endl;
-		icrd = _pousrcnt->IcrdRequestCrdPlay(pcrdLead);
+		icrd = _pousrcnt->IcrdRequestCrdPlay(pcrdLead, suitTrump);
 		crdRet = _veccrdHand[icrd];
 		fFirstAsk = false;
-	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead));
+	} while (!Rules::FLegalPlay(crdRet, _veccrdHand, pcrdLead, suitTrump));
 
 	_veccrdHand.erase(_veccrdHand.begin() + icrd);
 	return crdRet;

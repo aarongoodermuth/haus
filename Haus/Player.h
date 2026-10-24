@@ -22,7 +22,7 @@ class Player
 public:
 	void ResetRound();
 	virtual BetChoice BcRequestDesiredBet() = 0;
-	virtual Card CrdPlay(Card* pcrdLead) = 0;
+	virtual Card CrdPlay(Card* pcrdLead, Suit suitTrump) = 0;
 	virtual Suit SuitChooseTrump() = 0;
 	void ForceBet(BetChoice, bool fForcedToBet);
 	void TakeCard(const Card &crd);
@@ -79,7 +79,7 @@ public:
 	Computer(int iPos);
 
 	BetChoice BcRequestDesiredBet() override;
-	Card CrdPlay(Card* pcrdLead) override;
+	Card CrdPlay(Card* pcrdLead, Suit suitTrump) override;
 	Suit SuitChooseTrump() override;
 	void ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound) override {}
 
@@ -100,7 +100,7 @@ public:
 	User(GameView* pgmvw);
 
 	BetChoice BcRequestDesiredBet() override;
-	Card CrdPlay(Card* pcrdLead) override;
+	Card CrdPlay(Card* pcrdLead, Suit suitTrump) override;
 	Suit SuitChooseTrump() override;
 	void ShowTurnSummary(const std::string &strWinnerName, const Card &crdHighestOfRound) override;
 

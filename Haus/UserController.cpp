@@ -42,8 +42,10 @@ BetChoice UserController::BcRequestDesiredBet()
 	return static_cast<BetChoice>(chBetChoice - '1');
 }
 
-unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead)
+unsigned int UserController::IcrdRequestCrdPlay(const Card *pcrdLead, Suit suitTrump)
 {
+	(void)suitTrump; // picking an index needs no trump; legality is checked by the caller
+
 	unsigned int icrd = -1;
 	bool fHitOnce = false;
 

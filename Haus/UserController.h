@@ -14,7 +14,7 @@ public:
 	UserController(User* pusr, GameView* pgmvw);
 	
 	BetChoice BcRequestDesiredBet() override;
-	unsigned int IcrdRequestCrdPlay(const Card *pcrdLead) override;
+	unsigned int IcrdRequestCrdPlay(const Card *pcrdLead, Suit suitTrump) override;
 	Suit SuitChooseTrump() override;
 
 private:

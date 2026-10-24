@@ -3,12 +3,26 @@
 #include <algorithm>
 #include <assert.h>
 
-bool Rules::FLegalPlay(const Card crdToPlay, const std::vector<Card> veccrdHand, const Card* pcrdLead)
+bool Rules::FLegalPlay(const Card crdToPlay, const std::vector<Card> veccrdHand, const Card* pcrdLead, Suit suitTrump)
 {
-	if (pcrdLead == nullptr || crdToPlay.suit == pcrdLead->suit)
+	if (pcrdLead == nullptr)
 		return true;
 
-	return std::ranges::none_of(veccrdHand, [suit = pcrdLead->suit](const auto& crd) noexcept { return crd.suit == suit; });
+	// A bar is trump for every purpose, including following suit. The
+	// effective suit of a card is trump when FTrump says so, else its
+	// printed suit. (Fixed 2026-10-24: the old version compared printed
+	// suits, so the left bar escaped following trump, and the right bar
+	// escaped following a led left bar.)
+	auto suitEffective = [suitTrump](const Card& crd) {
+		return FTrump(crd, suitTrump) ? suitTrump : crd.suit;
+	};
+	const Suit suitLed = suitEffective(*pcrdLead);
+	if (suitEffective(crdToPlay) == suitLed)
+		return true;
+
+	return std::ranges::none_of(veccrdHand, [suitLed, &suitEffective](const Card& crd) {
+		return suitEffective(crd) == suitLed;
+	});
 }
 
 

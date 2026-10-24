@@ -1,4 +1,4 @@
-OPT=-std=c++11 
+OPT=-std=c++20 
 FILES=Haus/*.cpp
 OUT=hausapp
 

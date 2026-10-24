@@ -8,10 +8,10 @@ BetChoice BrainlessController::BcRequestDesiredBet()
 }
 
 
-unsigned int BrainlessController::IcrdRequestCrdPlay(const Card* pcrdLead)
+unsigned int BrainlessController::IcrdRequestCrdPlay(const Card* pcrdLead, Suit suitTrump)
 {
 	int icrdRet = 0;
-	while (!Rules::FLegalPlay(_ppl->_veccrdHand[icrdRet], _ppl->_veccrdHand, pcrdLead))
+	while (!Rules::FLegalPlay(_ppl->_veccrdHand[icrdRet], _ppl->_veccrdHand, pcrdLead, suitTrump))
 		icrdRet++;
 	return icrdRet;
 }

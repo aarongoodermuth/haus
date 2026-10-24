@@ -48,18 +48,18 @@ function cardStrength(card, trump, ledSuit) {
   if (isTrump(card, trump)) {
     if (isRightBower(card, trump)) return 100 + 7;
     if (isLeftBower(card, trump)) return 100 + 6;
-    return 100 + card.value; // trump A(5) > K(4) > Q(3) > 10(1) > 9(0); J is bower above
+    return 100 + card.value; // trump A(5) > K(4) > Q(3) > 10(1) > 9(0); J is bar above
   }
   if (card.suit === ledSuit) return 50 + card.value;
   return card.value;
 }
 function legalCards(hand, trump, ledCard) {
-  // A bower is trump for EVERY purpose, including following suit — this
+  // A bar is trump for EVERY purpose, including following suit — this
   // deliberately departs from C++ Rules::FLegalPlay, which judged by printed
   // suit (Aaron's correction, 2026-10-24). So with clubs trump and spades
   // led, the J♠ is a club, not a spade: a hand of J♠ + no other spades is
   // void in spades and may play anything. Conversely, when trump is led,
-  // the left bower must follow it like any other trump card.
+  // the left bar must follow it like any other trump card.
   if (!ledCard) return hand.slice();
   const ledSuit = effectiveSuit(ledCard, trump);
   const follow = hand.filter(c => effectiveSuit(c, trump) === ledSuit);
@@ -115,9 +115,9 @@ function leadCard(hand, trump) {
   const offAces = hand.filter(c => c.value === 5 && !isTrump(c, trump));
   if (offAces.length) return offAces[0]; // off-suit Ace: wins unless trumped
   const right = hand.find(c => isRightBower(c, trump));
-  if (right) return right; // nothing beats the right bower
+  if (right) return right; // nothing beats the right bar
   const left = hand.find(c => isLeftBower(c, trump));
-  if (left) return left; // only the right bower beats it
+  if (left) return left; // only the right bar beats it
   // Otherwise lead the top card of your longest suit (ties: higher top card,
   // then a non-trump suit) — long suits are where future tricks live.
   const bySuit = {};
@@ -181,7 +181,7 @@ if (typeof document !== "undefined") {
   const cardEl = (c, opts = {}) => {
     const el = document.createElement(opts.button ? "button" : "div");
     el.className = "card" + (SUIT_BY_ID[c.suit].color === "red" ? " red" : "") + (opts.small ? " small" : "") + (state.trump && isTrump(c, state.trump) ? " trump" : "") + (opts.winner ? " winner" : "");
-    el.innerHTML = `${cardLabel(c)}<span class="sub">${isRightBower(c, state.trump) ? "right bower" : isLeftBower(c, state.trump) ? "left bower" : ""}</span>`;
+    el.innerHTML = `${cardLabel(c)}<span class="sub">${isRightBower(c, state.trump) ? "right bar" : isLeftBower(c, state.trump) ? "left bar" : ""}</span>`;
     if (opts.button) { el.type = "button"; el.disabled = !!opts.disabled; el.addEventListener("click", () => playHumanCard(c)); }
     return el;
   };

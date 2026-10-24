@@ -9,8 +9,9 @@ h1 { margin:0; font-size:1.9rem; }
 .chip strong { color:var(--accent); }
 #status { margin-top:6px; font-size:.9rem; min-height:1.2em; }
 main { max-width:640px; margin:0 auto; padding:8px 12px 32px; }
-#table { display:grid; grid-template-columns:1fr auto 1fr; grid-template-areas:"west north east" "west center east"; gap:8px; align-items:center; text-align:center; min-height:150px; }
-.seat-north{grid-area:north}.seat-west{grid-area:west}.seat-east{grid-area:east}.seat-center{grid-area:center}
+#table { display:grid; grid-template-columns:1fr auto 1fr; grid-template-areas:". north ." "west center east" ". south ."; gap:8px; align-items:center; text-align:center; min-height:150px; }
+.seat-north{grid-area:north}.seat-west{grid-area:west}.seat-east{grid-area:east}.seat-center{grid-area:center}.seat-south{grid-area:south}
+.card.winner { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent), 0 0 18px rgba(245,158,11,.8); }
 .seat-name { font-size:.85rem; opacity:.9; margin-bottom:4px; }
 .hand-count { font-size:.75rem; opacity:.7; margin-top:4px; }
 .played { min-height:74px; display:flex; justify-content:center; }

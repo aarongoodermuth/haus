@@ -123,12 +123,12 @@ function botPlay(hand, trump, plays) {
 /* ---------------- Browser UI (skipped in Node tests) ---------------- */
 if (typeof document !== "undefined") {
   const NAMES = ["You", "Jarvis", "Karen", "Bender"]; // bots nod to the C++ build
-  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0 };
+  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1 };
   const $ = id => document.getElementById(id);
   const cardLabel = c => VALUES[c.value] + SUIT_BY_ID[c.suit].symbol;
   const cardEl = (c, opts = {}) => {
     const el = document.createElement(opts.button ? "button" : "div");
-    el.className = "card" + (SUIT_BY_ID[c.suit].color === "red" ? " red" : "") + (opts.small ? " small" : "") + (state.trump && isTrump(c, state.trump) ? " trump" : "");
+    el.className = "card" + (SUIT_BY_ID[c.suit].color === "red" ? " red" : "") + (opts.small ? " small" : "") + (state.trump && isTrump(c, state.trump) ? " trump" : "") + (opts.winner ? " winner" : "");
     el.innerHTML = `${cardLabel(c)}<span class="sub">${isRightBower(c, state.trump) ? "right bower" : isLeftBower(c, state.trump) ? "left bower" : ""}</span>`;
     if (opts.button) { el.type = "button"; el.disabled = !!opts.disabled; el.addEventListener("click", () => playHumanCard(c)); }
     return el;
@@ -141,17 +141,16 @@ if (typeof document !== "undefined") {
       ? `Trump: ${SUIT_BY_ID[state.trump].symbol} · Bid: ${state.bid.label} by ${state.players[state.bidder]?.name || "—"}`
       : "Bidding / dealing";
     state.players.forEach((p, i) => {
-      if (i === 0) return;
-      $("name-" + i).textContent = p.name;
+      $("name-" + i).textContent = (state.trickWinner === i && state.plays.length === 4 ? "🏆 " : "") + p.name;
       $("count-" + i).textContent = p.hand.length + " cards";
       const slot = $("played-" + i); slot.innerHTML = "";
-      const play = state.plays.find(x => x.player === i); if (play) slot.appendChild(cardEl(play.card, { small: true }));
+      const play = state.plays.find(x => x.player === i);
+      if (play) slot.appendChild(cardEl(play.card, { small: true, winner: state.trickWinner === i && state.plays.length === 4 }));
     });
-    const mine = $("played-2"); // reuse center-top area is north; human play shown in center-info below
     const center = $("center-info");
-    const myPlay = state.plays.find(x => x.player === 0);
     center.textContent = state.plays.length
-      ? "Trick: " + state.plays.map(x => `${state.players[x.player].name} ${cardLabel(x.card)}`).join(" · ")
+      ? "Trick: " + state.plays.map(x => `${state.players[x.player].name} ${cardLabel(x.card)}`).join(" · ") +
+        (state.trickWinner >= 0 && state.plays.length === 4 ? ` — 🏆 ${state.players[state.trickWinner].name} won the trick` : "")
       : (state.trump ? `${state.players[state.leader].name} to lead` : "Tap “Deal” to start");
     const handEl = $("hand"); handEl.innerHTML = "";
     const me = state.players[0]; if (!me) return;
@@ -169,7 +168,7 @@ if (typeof document !== "undefined") {
     const deck = shuffle(buildDeck());
     state.players.forEach(p => { p.tricks = 0; p.hand = []; });
     for (let r = 0; r < CARDS_PER_PLAYER; r++) for (let i = 0; i < 4; i++) state.players[(state.dealer + 1 + i) % 4].hand.push(deck.pop());
-    state.trump = null; state.plays = []; state.bid = BIDS[0]; state.bidder = -1; state.phase = "bid";
+    state.trump = null; state.plays = []; state.trickWinner = -1; state.bid = BIDS[0]; state.bidder = -1; state.phase = "bid";
     state.bidTurn = state.dealer; state.bidsSeen = 0; // C++ Round::DoBet starts bidding at the dealer
     msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with the dealer.`);
     render(); nextBid();
@@ -234,15 +233,16 @@ if (typeof document !== "undefined") {
     // no auto-advance. The button moves to the next trick, or, after the
     // last trick, to the hand summary (which itself waits on "Next Hand").
     state.phase = "trickEnd";
+    state.trickWinner = winner;
     const lastTrick = state.players[0].hand.length === 0;
-    msg(`${state.players[winner].name} takes the trick. ${lastTrick ? "That was the last one." : ""}`);
+    msg(`🏆 ${state.players[winner].name} won the trick. ${lastTrick ? "That was the last one." : ""}`);
     const panel = $("panel"); panel.innerHTML = "";
     const btn = document.createElement("button"); btn.type = "button";
     btn.textContent = lastTrick ? "Finish Hand ▸" : "Next Trick ▸";
     btn.addEventListener("click", () => {
       panel.innerHTML = "";
-      if (lastTrick) return endHand(); // keep the final trick on the table under the summary
-      state.plays = [];
+      if (lastTrick) return endHand(); // keep the final trick (and its winner highlight) under the summary
+      state.plays = []; state.trickWinner = -1;
       state.phase = "play"; state.turn = winner; render(); nextPlay();
     });
     panel.appendChild(btn);

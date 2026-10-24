@@ -32,6 +32,8 @@ button.card:disabled { opacity:.35; cursor:default; }
 #hand .card.disabled { opacity:.35; }
 #hand .card.dragging { cursor:grabbing; position:fixed; margin:0; z-index:50; pointer-events:none; opacity:.94; box-shadow:0 14px 30px rgba(0,0,0,.55); border-color:var(--accent); }
 #hand .card.placeholder { background:rgba(255,201,71,.10); border:2px dashed var(--accent); opacity:.55; }
+#bid-info { margin:8px 0; font-size:.9rem; opacity:.85; line-height:1.5; }
+#bid-info:empty { display:none; }
 button.card:not(:disabled):active { transform:translateY(-4px); }
 .card .sub { font-size:.6rem; font-weight:600; opacity:.65; }
 #message { text-align:center; min-height:1.4em; }

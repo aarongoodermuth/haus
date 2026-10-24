@@ -140,6 +140,20 @@ if (typeof document !== "undefined") {
     $("status").textContent = state.trump
       ? `Trump: ${SUIT_BY_ID[state.trump].symbol} · Bid: ${state.bid.label} by ${state.players[state.bidder]?.name || "—"}`
       : "Bidding / dealing";
+    // Bidding stage only: who dealt, who is currently under for the default
+    // 3 (C++ DoBet: the dealer holds a standing 3 until someone bids higher),
+    // and every bid made so far, so your turn shows what came before it.
+    const bidInfo = $("bid-info");
+    if (state.phase === "bid" && state.players.length) {
+      const dealerName = state.players[state.dealer].name;
+      const underNote = state.bids.every(b => b.label === "Pass")
+        ? ` · ${dealerName} is under for 3 unless someone bids higher`
+        : "";
+      bidInfo.innerHTML = `<div>Dealer: ${dealerName}${underNote}</div>` +
+        (state.bids.length
+          ? `<div>Bids so far: ${state.bids.map(b => `${state.players[b.player].name} — ${b.label}`).join(" · ")}</div>`
+          : "");
+    } else bidInfo.innerHTML = "";
     state.players.forEach((p, i) => {
       $("name-" + i).textContent = (state.trickWinner === i && state.plays.length === 4 ? "🏆 " : "") + p.name;
       const slot = $("played-" + i); slot.innerHTML = "";
@@ -255,7 +269,11 @@ if (typeof document !== "undefined") {
     // Sort once, here at the deal. From then on the array order IS the display
     // order, so the player can drag cards into their own order and it sticks.
     state.players.forEach(p => p.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value));
-    state.trump = null; state.plays = []; state.trickWinner = -1; state.bid = BIDS[0]; state.bidder = -1; state.phase = "bid";
+    state.trump = null; state.plays = []; state.trickWinner = -1; state.phase = "bid";
+    // C++ Round::DoBet: the dealer starts holding the default 3. A bid only
+    // counts if it beats the standing bid, so "Bid 3" is never offered and
+    // the dealer is under for 3 unless someone bids higher.
+    state.bid = BIDS.find(b => b.id === "3"); state.bidder = state.dealer; state.bids = [];
     state.bidTurn = state.dealer; state.bidsSeen = 0; // C++ Round::DoBet starts bidding at the dealer
     msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with the dealer.`);
     hideMainBtn(); // the Deal button is done its job — it stays out of the way until the hand ends
@@ -267,8 +285,14 @@ if (typeof document !== "undefined") {
     if (i === 0) {
       const panel = $("panel"); panel.innerHTML = "";
       BIDS.forEach(b => {
+        // Same-or-lower bids are never offered: only bids beating the
+        // standing bid appear, and the standing 3 already rules out "Bid 3".
         if (b.id !== "pass" && b.amount <= state.bid.amount) return;
-        const btn = document.createElement("button"); btn.type = "button"; btn.textContent = b.id === "pass" ? "Pass" : "Bid " + b.label;
+        const btn = document.createElement("button"); btn.type = "button";
+        // The dealer can't pass out of the obligation: the dealer's "pass"
+        // is accepting the under-for-3, so the button says exactly that.
+        const dealerPass = b.id === "pass" && state.dealer === 0;
+        btn.textContent = b.id === "pass" ? (dealerPass ? "Under for 3" : "Pass") : "Bid " + b.label;
         if (b.id === "pass") btn.className = "secondary";
         btn.addEventListener("click", () => { panel.innerHTML = ""; acceptBid(0, b); });
         panel.appendChild(btn);
@@ -280,14 +304,16 @@ if (typeof document !== "undefined") {
     render();
   }
   function acceptBid(i, bid) {
+    state.bids.push({ player: i, label: bid.id === "pass" ? "Pass" : bid.label });
     if (bid.amount > state.bid.amount) { state.bid = bid; state.bidder = i; msg(`${state.players[i].name} bids ${bid.label}.`); }
     else msg(`${state.players[i].name} passes.`);
     state.bidsSeen++; state.bidTurn = (state.bidTurn + 1) % 4; nextBid();
   }
   function finishBidding() {
-    if (state.bidder === -1) { // all passed: dealer is forced at 3 ("screw the dealer")
-      state.bidder = state.dealer; state.bid = BIDS.find(b => b.id === "3");
-      msg(`Everyone passed — dealer ${state.players[state.dealer].name} is stuck with a bid of 3.`);
+    // With the standing 3, "all passed" just means the dealer is still the
+    // bidder at 3 — under for it, exactly as C++ ForceBet(fForcedToTake).
+    if (state.bidder === state.dealer && state.bid.amount === 3) {
+      msg(`Everyone passed — dealer ${state.players[state.dealer].name} is under for 3.`);
     }
     if (state.bidder === 0) {
       const panel = $("panel"); panel.innerHTML = "";
@@ -296,7 +322,9 @@ if (typeof document !== "undefined") {
         btn.addEventListener("click", () => { panel.innerHTML = ""; setTrump(s.id); });
         panel.appendChild(btn);
       });
-      msg(`You won the bid at ${state.bid.label}. Pick trump:`);
+      msg(state.bidder === state.dealer && state.bid.amount === 3
+        ? `You're under for 3 — pick trump:`
+        : `You won the bid at ${state.bid.label}. Pick trump:`);
     } else {
       setTimeout(() => setTrump(botChooseTrump(state.players[state.bidder].hand)), 500);
     }

@@ -25,6 +25,10 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
   - *Haus* = a bid to take all 6 tricks, worth **12 points**. No card
     exchange, no playing alone — all four players play the hand out.
   - If everyone passes, the **dealer is forced to bid 3** ("screw the dealer").
+    Mechanically the dealer starts the round **holding a standing bid of 3**
+    (C++ `DEFAULT_DEALER`), so a bid of 3 never counts as a raise, and the
+    dealer is "under for 3" until someone bids higher. The dealer's pass
+    therefore means accepting the under-for-3, not escaping it.
 - **Trump:** The high bidder names trump and leads the first trick.
   - Trump rank: **right bower** (Jack of trump) highest, then **left bower**
     (Jack of the other suit of the same colour — it counts as trump for

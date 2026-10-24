@@ -172,7 +172,7 @@ function botPlay(hand, trump, plays, ctx = {}) {
 /* ---------------- Browser UI (skipped in Node tests) ---------------- */
 if (typeof document !== "undefined") {
   const NAMES = ["You", "Jarvis", "Karen", "Bender"]; // bots nod to the C++ build
-  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1 };
+  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], playedAll: [], turn: 0, leader: 0, trickWinner: -1 };
   const $ = id => document.getElementById(id);
   const cardLabel = c => VALUES[c.value] + SUIT_BY_ID[c.suit].symbol;
   const cardEl = (c, opts = {}) => {
@@ -214,6 +214,11 @@ if (typeof document !== "undefined") {
       ? "Trick: " + state.plays.map(x => `${state.players[x.player].name} ${cardLabel(x.card)}`).join(" · ") +
         (state.trickWinner >= 0 && state.plays.length === 4 ? ` — 🏆 ${state.players[state.trickWinner].name} won the trick` : "")
       : (state.trump ? `${state.players[state.leader].name} to lead` : "Tap “Deal” to start");
+    // Played-cards tray at the bottom: every card played this hand, face up,
+    // in play order. It outlives each trick (the table seats clear per trick).
+    const playedAllEl = $("played-all");
+    playedAllEl.innerHTML = "";
+    state.playedAll.forEach(c => playedAllEl.appendChild(cardEl(c, { small: true })));
     const handEl = $("hand");
     if (handDrag && handDrag.active) return; // don't rebuild the hand mid-drag (bot timers re-render)
     handEl.innerHTML = "";
@@ -318,7 +323,7 @@ if (typeof document !== "undefined") {
     // Sort once, here at the deal. From then on the array order IS the display
     // order, so the player can drag cards into their own order and it sticks.
     state.players.forEach(p => p.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value));
-    state.trump = null; state.plays = []; state.trickWinner = -1; state.phase = "bid";
+    state.trump = null; state.plays = []; state.playedAll = []; state.trickWinner = -1; state.phase = "bid";
     // C++ Round::DoBet: the dealer starts holding the default 3. A bid only
     // counts if it beats the standing bid, so "Bid 3" is never offered and
     // the dealer is under for 3 unless someone bids higher.
@@ -427,6 +432,7 @@ if (typeof document !== "undefined") {
     const p = state.players[i];
     p.hand = p.hand.filter(c => c !== card);
     state.plays.push({ player: i, card });
+    state.playedAll.push(card); // every played card stays visible, face up, at the bottom
     if (state.plays.length === 4) {
       const winner = trickWinner(state.plays, state.trump);
       state.players[winner].tricks++;

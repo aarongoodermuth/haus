@@ -351,7 +351,11 @@ if (typeof document !== "undefined") {
         btn.addEventListener("click", () => { panel.innerHTML = ""; acceptBid(0, b); });
         panel.appendChild(btn);
       });
-      msg("Your bid — or pass.");
+      // Same condition that hides the Pass button: a dealer facing an
+      // empty round can't pass, so the prompt must not offer it.
+      msg(state.dealer === 0 && state.bidder === -1
+        ? "Your bid — you can't pass, nobody has bid yet."
+        : "Your bid — or pass.");
     } else {
       setTimeout(() => {
         let b = botBid(state.players[i].hand, state.bid);

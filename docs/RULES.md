@@ -35,11 +35,12 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
     winning tricks), then A, K, Q, 10, 9.
   - Other suits rank A, K, Q, J, 10, 9. No "no-trump" call.
 - **Play:** Must follow the suit led if you can — judged by the card's
-  **printed suit**, per C++ `Rules::FLegalPlay`. So the left bower does not
-  satisfy following trump, and it *must* be played as its printed suit when
-  that suit is led and it's your only card of it. For winning, though, it
-  counts as trump. Highest trump wins the trick; otherwise the highest card
-  of the suit led. Trick winner leads next.
+  **effective suit**: a bower is trump for every purpose, including
+  following suit. So with clubs trump and spades led, the J♠ is a club,
+  not a spade — a hand holding J♠ and no other spades is void in spades
+  and may play anything. Conversely, when trump is led, the left bower
+  must follow it like any other trump card. Highest trump wins the trick;
+  otherwise the highest card of the suit led. Trick winner leads next.
 - **Scoring (per player, from the C++ build):**
   - Bidder makes the bid → scores the greater of tricks taken or the bid amount
     (Haus made → 12).
@@ -55,8 +56,10 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
    "Hausey" double-deck variant (12 cards, minimum bid 6).
 3. **"Haus" bid** → All 6 tricks for +12 / −12, no partner exchange, no
    playing alone (C++ `BetChoice::TWELVE`).
-4. **Left bower follow-suit** → By printed suit (C++ `FLegalPlay`), as
-   described under Play above. Deliberately non-standard vs Euchre.
+4. **Left bower follow-suit** → ~~By printed suit (C++ `FLegalPlay`)~~ —
+   **corrected by Aaron 2026-10-24: a bower is always trump**, including
+   for following suit (see Play above). The C++ printed-suit rule is not
+   followed here.
 5. **No-trump / high / low calls?** → None. Trump is always a suit (C++).
 6. **Game target** → 31 (C++ `FIsWinner`), winner is the high scorer.
 7. **All-pass rule** → Dealer forced at 3 (C++ `DEFAULT_DEALER`).
@@ -73,6 +76,11 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
     in the unfinished C++ code rather than a house rule, so the web build
     uses the standard reading (off-suit cards can't win a trick) and flags it
     here. Easy to flip if that really was intended.
+
+12. **Bower follow-suit.** C++ `Rules::FLegalPlay` judges following suit by
+    printed suit, which would make the left bower follow its printed suit.
+    Aaron corrected this 2026-10-24: a bower is always trump, including
+    for following suit (see Play above and item 4).
 
 Everything else about the rules is deferred — Aaron will have more to say
 later. This file is where rule changes get recorded as they're decided.

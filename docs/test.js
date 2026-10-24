@@ -38,14 +38,25 @@ w = G.trickWinner([
 ], hearts);
 assert.strictEqual(w, 1);
 
-// Follow suit, C++ FLegalPlay style: judged by PRINTED suit.
-// Led trump (hearts) with no printed heart in hand -> anything goes, left bower included.
+// Follow suit, judged by EFFECTIVE suit: a bower is always trump.
+// (This departs from C++ FLegalPlay's printed-suit rule, per Aaron 2026-10-24.)
+// Led trump (hearts): the left bower (J♦) IS trump and must follow it.
 const hand = [{ suit: "diamonds", value: 2 }, { suit: "clubs", value: 5 }];
-assert.strictEqual(G.legalCards(hand, hearts, { suit: "hearts", value: 3 }).length, 2);
-// Led diamonds -> the left bower (J♦) is a printed diamond and must follow.
-assert.deepStrictEqual(G.legalCards(hand, hearts, { suit: "diamonds", value: 3 }), [hand[0]]);
+assert.deepStrictEqual(G.legalCards(hand, hearts, { suit: "hearts", value: 3 }), [hand[0]]);
+// Led diamonds: the left bower is hearts (trump), not diamonds, so with no
+// diamonds in hand anything goes.
+assert.strictEqual(G.legalCards(hand, hearts, { suit: "diamonds", value: 3 }).length, 2);
 // Led a suit you hold -> only that suit; led a suit you don't -> anything.
 assert.strictEqual(G.legalCards(hand, hearts, { suit: "spades", value: 3 }).length, 2);
+// Aaron's exact case: clubs trump, spades led, hand J♠ + no other spades.
+// J♠ is a club, so the hand is void in spades: everything is legal.
+const aaronHand = [{ suit: "spades", value: 2 }, { suit: "hearts", value: 0 }];
+assert.strictEqual(G.legalCards(aaronHand, "clubs", { suit: "spades", value: 3 }).length, 2);
+// Same, but holding a real spade too: only the spade follows; J♠ stays a club.
+const withSpade = [{ suit: "spades", value: 2 }, { suit: "spades", value: 0 }];
+assert.deepStrictEqual(G.legalCards(withSpade, "clubs", { suit: "spades", value: 3 }), [withSpade[1]]);
+// Trump led: the left bower must follow trump like any trump card.
+assert.deepStrictEqual(G.legalCards(aaronHand, "clubs", { suit: "clubs", value: 3 }), [aaronHand[0]]);
 
 // Scoring (from the C++ build): bidder makes 4 with 5 tricks -> +5; misses 4 -> -4;
 // Haus makes all 6 -> +12; misses -> -12; non-bidders get +1 per trick won.

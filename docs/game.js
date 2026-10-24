@@ -54,12 +54,15 @@ function cardStrength(card, trump, ledSuit) {
   return card.value;
 }
 function legalCards(hand, trump, ledCard) {
-  // C++ Rules::FLegalPlay, faithfully: following suit is judged by the card's
-  // PRINTED suit. The left bower still counts as trump for winning a trick,
-  // but it does not satisfy (or require) following trump, and it must be
-  // played when its printed suit is led and it's your only card of that suit.
+  // A bower is trump for EVERY purpose, including following suit — this
+  // deliberately departs from C++ Rules::FLegalPlay, which judged by printed
+  // suit (Aaron's correction, 2026-10-24). So with clubs trump and spades
+  // led, the J♠ is a club, not a spade: a hand of J♠ + no other spades is
+  // void in spades and may play anything. Conversely, when trump is led,
+  // the left bower must follow it like any other trump card.
   if (!ledCard) return hand.slice();
-  const follow = hand.filter(c => c.suit === ledCard.suit);
+  const ledSuit = effectiveSuit(ledCard, trump);
+  const follow = hand.filter(c => effectiveSuit(c, trump) === ledSuit);
   return follow.length ? follow : hand.slice();
 }
 function trickWinner(plays, trump) { // plays: [{player, card}] in play order

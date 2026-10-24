@@ -60,6 +60,40 @@ assert.deepStrictEqual(scored(3, "4"), [-4, 0, 0, 0]);
 assert.deepStrictEqual(scored(6, "haus"), [12, 0, 0, 0]);
 assert.deepStrictEqual(scored(5, "haus"), [-12, 0, 0, 0]);
 
+// Bot play strategy
+const C = (suit, value) => ({ suit, value });
+// Lead: off-suit Ace first, then right bower, then top of longest suit.
+assert.deepStrictEqual(G.botPlay([C("hearts", 5), C("hearts", 0), C("spades", 4)], "clubs", []), C("hearts", 5));
+assert.deepStrictEqual(G.botPlay([C("clubs", 2), C("diamonds", 0), C("spades", 1)], "clubs", []), C("clubs", 2));
+assert.deepStrictEqual(G.botPlay([C("hearts", 3), C("hearts", 0), C("spades", 4)], "clubs", []), C("hearts", 3));
+// Follow: win as cheaply as possible (led 9♠, holds K♠/A♠ -> K♠).
+assert.deepStrictEqual(
+  G.botPlay([C("spades", 4), C("spades", 5), C("hearts", 0)], "clubs", [{ player: 0, card: C("spades", 0) }]),
+  C("spades", 4));
+// Follow: can't win and void in the led suit -> shed the lowest non-trump.
+assert.deepStrictEqual(
+  G.botPlay([C("hearts", 0), C("diamonds", 4), C("hearts", 1)], "clubs", [{ player: 0, card: C("spades", 5) }]),
+  C("hearts", 0));
+// Follow: winning costs trump, not last to act, nobody's bid threatened -> save the trump.
+assert.deepStrictEqual(
+  G.botPlay([C("clubs", 2), C("hearts", 0)], "clubs",
+    [{ player: 0, card: C("diamonds", 0) }, { player: 1, card: C("diamonds", 1) }]),
+  C("hearts", 0));
+// Same, but last to act -> take it with the bower.
+assert.deepStrictEqual(
+  G.botPlay([C("clubs", 2), C("hearts", 0)], "clubs",
+    [{ player: 0, card: C("diamonds", 0) }, { player: 1, card: C("diamonds", 1) }, { player: 3, card: C("diamonds", 3) }]),
+  C("clubs", 2));
+// Same, but the bidder is winning -> deny them even when not last.
+assert.deepStrictEqual(
+  G.botPlay([C("clubs", 2), C("hearts", 0)], "clubs",
+    [{ player: 0, card: C("diamonds", 5) }], { self: 2, bidder: 0 }),
+  C("clubs", 2));
+// Must follow trump with only trump in hand -> take the trick with the bower.
+assert.deepStrictEqual(
+  G.botPlay([C("clubs", 2), C("clubs", 1)], "clubs", [{ player: 0, card: C("clubs", 3) }]),
+  C("clubs", 2));
+
 // Full random games: every hand ends, tricks always total 6, someone reaches 31
 for (let game = 0; game < 200; game++) {
   const players = [0, 1, 2, 3].map(() => ({ score: 0, tricks: 0, hand: [] }));

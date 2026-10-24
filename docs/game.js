@@ -106,18 +106,67 @@ function botBid(hand, currentBid) {
   return BIDS[0];
 }
 function botChooseTrump(hand) { return estimateBid(hand).suit || "spades"; }
-function botPlay(hand, trump, plays) {
+function leadCard(hand, trump) {
+  // Lead from strength: a trick in hand is worth the same whenever you take
+  // it, so open with a card that is hard to beat, not a middling one.
+  const offAces = hand.filter(c => c.value === 5 && !isTrump(c, trump));
+  if (offAces.length) return offAces[0]; // off-suit Ace: wins unless trumped
+  const right = hand.find(c => isRightBower(c, trump));
+  if (right) return right; // nothing beats the right bower
+  const left = hand.find(c => isLeftBower(c, trump));
+  if (left) return left; // only the right bower beats it
+  // Otherwise lead the top card of your longest suit (ties: higher top card,
+  // then a non-trump suit) — long suits are where future tricks live.
+  const bySuit = {};
+  for (const c of hand) (bySuit[effectiveSuit(c, trump)] ||= []).push(c);
+  const suits = Object.keys(bySuit).sort((a, b) =>
+    bySuit[b].length - bySuit[a].length ||
+    Math.max(...bySuit[b].map(c => c.value)) - Math.max(...bySuit[a].map(c => c.value)) ||
+    (a === trump ? 1 : 0) - (b === trump ? 1 : 0));
+  const suitCards = bySuit[suits[0]];
+  return suitCards.reduce((best, c) => c.value > best.value ? c : best, suitCards[0]);
+}
+function discardCard(hand, trump, legal) {
+  // Shedding (void in the led suit, no win available): lose as little as
+  // possible. Never throw away trump while a non-trump card exists; among
+  // equals, shed from a singleton suit to open a void for later trumping.
+  const suitCount = c => hand.filter(x => x.suit === c.suit).length;
+  return legal.slice().sort((a, b) =>
+    (isTrump(a, trump) - isTrump(b, trump)) ||
+    a.value - b.value ||
+    suitCount(a) - suitCount(b))[0];
+}
+function botPlay(hand, trump, plays, ctx = {}) {
+  // ctx (from the UI; optional in tests): { self, bidder, bidderLive }.
+  // bidderLive = the bidder can still make the bid, so winning matters more
+  // to them than saving trump. No partnerships here — every player scores
+  // alone — so there is no "help your partner" logic, only win/deny/preserve.
   const ledCard = plays.length ? plays[0].card : null;
+  if (!ledCard) return leadCard(hand, trump);
   const legal = legalCards(hand, trump, ledCard);
-  const led = ledCard ? effectiveSuit(ledCard, trump) : null;
+  const led = effectiveSuit(ledCard, trump);
   const sorted = legal.slice().sort((a, b) => cardStrength(a, trump, led) - cardStrength(b, trump, led));
-  if (!ledCard) return sorted[Math.floor(sorted.length / 2)]; // lead a middling card
   const currentBest = Math.max(...plays.map(p => cardStrength(p.card, trump, led)));
+  const currentWinner = plays.reduce((best, p) =>
+    cardStrength(p.card, trump, led) > cardStrength(best.card, trump, led) ? p : best, plays[0]);
   const winning = sorted.filter(c => cardStrength(c, trump, led) > currentBest);
-  // Win as cheaply as possible if a win is cheap; otherwise shed the lowest card.
-  if (winning.length && cardStrength(winning[0], trump, led) < 100) return winning[0];
-  if (winning.length && plays.length === 3) return winning[0]; // last to act: take it
-  return sorted[0];
+  if (winning.length) {
+    const cheapest = winning[0];
+    if (!isTrump(cheapest, trump)) return cheapest; // win without spending trump
+    // Winning costs trump. If every legal card is trump, the trump is spent
+    // either way, so take the trick. Otherwise it's worth it only when the
+    // win is guaranteed (last to act), when it denies the bidder a trick,
+    // or when you are the bidder and the bid is still alive — else save
+    // the trump and shed a cheap card instead.
+    const canShed = legal.some(c => !isTrump(c, trump));
+    const lastToAct = plays.length === 3;
+    const deniesBidder = ctx.bidder != null && currentWinner.player === ctx.bidder && ctx.self !== ctx.bidder;
+    if (!canShed || lastToAct || deniesBidder || ctx.bidderLive) return cheapest;
+    return discardCard(hand, trump, legal);
+  }
+  // Can't win this trick: lose as cheaply as possible (discardCard picks the
+  // lowest legal card, which is the lowest of the led suit when following).
+  return discardCard(hand, trump, legal);
 }
 
 /* ---------------- Browser UI (skipped in Node tests) ---------------- */
@@ -340,7 +389,13 @@ if (typeof document !== "undefined") {
     if (state.turn === 0) { msg("Your turn — tap a card."); return; }
     setTimeout(() => {
       const p = state.players[state.turn];
-      const card = botPlay(p.hand, state.trump, state.plays);
+      const card = botPlay(p.hand, state.trump, state.plays, {
+        self: state.turn,
+        bidder: state.bidder,
+        // Bidder's bid is still alive if the tricks they hold plus the tricks
+        // left (one per card still in hand) can still reach the requirement.
+        bidderLive: state.turn === state.bidder && p.tricks + p.hand.length >= state.bid.required,
+      });
       doPlay(state.turn, card);
     }, 550);
   }

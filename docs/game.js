@@ -136,7 +136,7 @@ if (typeof document !== "undefined") {
   function msg(t) { $("message").textContent = t || ""; }
   function render() {
     $("scoreboard").innerHTML = state.players.map((p, i) =>
-      `<span class="chip">${i === state.dealer ? "🂠 " : ""}${p.name}: <strong>${p.score}</strong> · ${p.tricks} trk</span>`).join("");
+      `<span class="chip">${i === state.dealer ? "🂠 " : ""}${p.name}: <strong>${p.score}</strong> · ${p.tricks} ${p.tricks === 1 ? "trick" : "tricks"}</span>`).join("");
     $("status").textContent = state.trump
       ? `Trump: ${SUIT_BY_ID[state.trump].symbol} · Bid: ${state.bid.label} by ${state.players[state.bidder]?.name || "—"}`
       : "Bidding / dealing";

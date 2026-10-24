@@ -229,6 +229,25 @@ if (typeof document !== "undefined") {
       doPlay(state.turn, card);
     }, 550);
   }
+  function pauseAfterTrick(winner) {
+    // Leave the completed trick on the table until the player is ready —
+    // no auto-advance. The button moves to the next trick, or, after the
+    // last trick, to the hand summary (which itself waits on "Next Hand").
+    state.phase = "trickEnd";
+    const lastTrick = state.players[0].hand.length === 0;
+    msg(`${state.players[winner].name} takes the trick. ${lastTrick ? "That was the last one." : ""}`);
+    const panel = $("panel"); panel.innerHTML = "";
+    const btn = document.createElement("button"); btn.type = "button";
+    btn.textContent = lastTrick ? "Finish Hand ▸" : "Next Trick ▸";
+    btn.addEventListener("click", () => {
+      panel.innerHTML = "";
+      if (lastTrick) return endHand(); // keep the final trick on the table under the summary
+      state.plays = [];
+      state.phase = "play"; state.turn = winner; render(); nextPlay();
+    });
+    panel.appendChild(btn);
+    render();
+  }
   function playHumanCard(card) {
     if (state.phase !== "play" || state.turn !== 0) return;
     doPlay(0, card);
@@ -240,13 +259,8 @@ if (typeof document !== "undefined") {
     if (state.plays.length === 4) {
       const winner = trickWinner(state.plays, state.trump);
       state.players[winner].tricks++;
-      msg(`${state.players[winner].name} takes the trick.`);
       state.leader = winner;
-      setTimeout(() => {
-        state.plays = [];
-        if (state.players[0].hand.length === 0) return endHand();
-        state.turn = winner; render(); nextPlay();
-      }, 900);
+      pauseAfterTrick(winner);
     } else {
       state.turn = (i + 1) % 4; render(); nextPlay();
     }

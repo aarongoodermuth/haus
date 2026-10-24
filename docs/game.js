@@ -212,11 +212,12 @@ if (typeof document !== "undefined") {
       const play = state.plays.find(x => x.player === i);
       if (play) slot.appendChild(cardEl(play.card, { small: true, winner: state.trickWinner === i && state.plays.length === 4 }));
     });
+    // The center stays quiet: the trick itself is shown by the cards in the
+    // seats, the winner by the trophy by their name + the gold card, and
+    // the Deal button speaks for itself. The only thing the center still
+    // says is who leads, which appears nowhere else.
     const center = $("center-info");
-    center.textContent = state.plays.length
-      ? "Trick: " + state.plays.map(x => `${state.players[x.player].name} ${cardLabel(x.card)}`).join(" · ") +
-        (state.trickWinner >= 0 && state.plays.length === 4 ? ` — 🏆 ${state.players[state.trickWinner].name} won the trick` : "")
-      : (state.trump ? `${state.players[state.leader].name} to lead` : "Tap “Deal” to start");
+    center.textContent = (!state.plays.length && state.trump) ? `${state.players[state.leader].name} to lead` : "";
     const handEl = $("hand");
     if (handDrag && handDrag.active) return; // don't rebuild the hand mid-drag (bot timers re-render)
     handEl.innerHTML = "";
@@ -322,12 +323,13 @@ if (typeof document !== "undefined") {
     // order, so the player can drag cards into their own order and it sticks.
     state.players.forEach(p => p.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value));
     state.trump = null; state.plays = []; state.trickWinner = -1; state.phase = "bid";
-    // C++ Round::DoBet: the dealer starts holding the default 3. A bid only
-    // counts if it beats the standing bid, so "Bid 3" is never offered and
-    // the dealer is under for 3 unless someone bids higher.
-    state.bid = BIDS.find(b => b.id === "3"); state.bidder = state.dealer; state.bids = [];
-    state.bidTurn = state.dealer; state.bidsSeen = 0; // C++ Round::DoBet starts bidding at the dealer
-    msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with the dealer.`);
+    // Aaron's rule, overriding C++ DoBet: the dealer bids LAST, not first.
+    // Bidding starts left of the dealer; there is no standing bid, so the
+    // first bid only has to beat pass. The dealer is under for 3 in the
+    // sense that if nobody bids, the dealer cannot pass and must bid 3+.
+    state.bid = BIDS[0]; state.bidder = -1; state.bids = [];
+    state.bidTurn = (state.dealer + 1) % 4; state.bidsSeen = 0;
+    msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with ${state.players[state.bidTurn].name}, dealer bids last.`);
     hideMainBtn(); // the Deal button is done its job — it stays out of the way until the hand ends
     render(); nextBid();
   }
@@ -338,20 +340,26 @@ if (typeof document !== "undefined") {
       const panel = $("panel"); panel.innerHTML = "";
       BIDS.forEach(b => {
         // Same-or-lower bids are never offered: only bids beating the
-        // standing bid appear, and the standing 3 already rules out "Bid 3".
+        // current high bid appear.
         if (b.id !== "pass" && b.amount <= state.bid.amount) return;
+        // The dealer bids last: if nobody has bid yet, the dealer cannot
+        // pass — the dealer must bid at least 3 (the "under for 3" case).
+        if (b.id === "pass" && state.dealer === 0 && state.bidder === -1) return;
         const btn = document.createElement("button"); btn.type = "button";
-        // The dealer can't pass out of the obligation: the dealer's "pass"
-        // is accepting the under-for-3, so the button says exactly that.
-        const dealerPass = b.id === "pass" && state.dealer === 0;
-        btn.textContent = b.id === "pass" ? (dealerPass ? "Under for 3" : "Pass") : "Bid " + b.label;
+        btn.textContent = b.id === "pass" ? "Pass" : "Bid " + b.label;
         if (b.id === "pass") btn.className = "secondary";
         btn.addEventListener("click", () => { panel.innerHTML = ""; acceptBid(0, b); });
         panel.appendChild(btn);
       });
       msg("Your bid — or pass.");
     } else {
-      setTimeout(() => acceptBid(i, botBid(state.players[i].hand, state.bid)), 450);
+      setTimeout(() => {
+        let b = botBid(state.players[i].hand, state.bid);
+        // The dealer-last rule applies to bots too: a dealer facing an
+        // empty bidding round cannot pass, so a passing bot dealer bids 3.
+        if (i === state.dealer && state.bidder === -1 && b.id === "pass") b = BIDS.find(x => x.id === "3");
+        acceptBid(i, b);
+      }, 450);
     }
     render();
   }
@@ -362,9 +370,13 @@ if (typeof document !== "undefined") {
     state.bidsSeen++; state.bidTurn = (state.bidTurn + 1) % 4; nextBid();
   }
   function finishBidding() {
-    // With the standing 3, "all passed" just means the dealer is still the
-    // bidder at 3 — under for it, exactly as C++ ForceBet(fForcedToTake).
-    if (state.bidder === state.dealer && state.bid.amount === 3) {
+    // Safety net (unreachable now that the dealer can't pass an empty
+    // round): if somehow nobody bid, the dealer takes 3.
+    if (state.bidder === -1) { state.bidder = state.dealer; state.bid = BIDS.find(b => b.id === "3"); }
+    // Under for 3: the dealer bid the minimum 3 because nobody else bid.
+    state.bidForced = state.bidder === state.dealer && state.bid.amount === 3 &&
+      state.bids.filter(b => b.player !== state.dealer).every(b => b.label === "Pass");
+    if (state.bidForced) {
       msg(`Everyone passed — dealer ${state.players[state.dealer].name} is under for 3.`);
     }
     if (state.bidder === 0) {
@@ -374,7 +386,7 @@ if (typeof document !== "undefined") {
         btn.addEventListener("click", () => { panel.innerHTML = ""; setTrump(s.id); });
         panel.appendChild(btn);
       });
-      msg(state.bidder === state.dealer && state.bid.amount === 3
+      msg(state.bidForced
         ? `You're under for 3 — pick trump:`
         : `You won the bid at ${state.bid.label}. Pick trump:`);
     } else {

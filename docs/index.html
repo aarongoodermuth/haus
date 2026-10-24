@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#14532d">
 <title>Haus — a Hasenpfeffer card game</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🐰%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=20261023-17">
+<link rel="stylesheet" href="style.css?v=20261023-18">
 </head>
 <body>
 <header>
@@ -20,7 +20,7 @@
   <section id="table" aria-label="Table">
     <div class="seat seat-north"><div class="seat-name" id="name-2"></div><div class="played" id="played-2"></div></div>
     <div class="seat seat-west"><div class="seat-name" id="name-1"></div><div class="played" id="played-1"></div></div>
-    <div class="seat seat-center" id="center-info">Tap “Deal” to start</div>
+    <div class="seat seat-center" id="center-info"></div>
     <div class="seat seat-east"><div class="seat-name" id="name-3"></div><div class="played" id="played-3"></div></div>
     <div class="seat seat-south"><div class="seat-name" id="name-0">You</div><div class="played" id="played-0"></div></div>
   </section>
@@ -38,9 +38,9 @@
   <p id="message" role="status" aria-live="polite"></p>
   <button id="main-btn" type="button">Deal</button>
   <p class="rules-link"><a href="RULES.md">Draft rules &amp; open questions</a> · Rules are a working draft — see RULES.md in the repo.</p>
-  <p class="rules-link" id="build-stamp">Build 2026-10-23.17 · bars, not bowers, in the UI</p>
+  <p class="rules-link" id="build-stamp">Build 2026-10-23.18 · quiet center + dealer bids last</p>
 </main>
 
-<script src="game.js?v=20261023-17"></script>
+<script src="game.js?v=20261023-18"></script>
 </body>
 </html>

@@ -19,16 +19,16 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
   You + 3 bots (Jarvis, Karen, Bender).
 - **Deck:** 24 cards — 9, 10, J, Q, K, A in each suit. No joker.
 - **Deal:** 6 cards each, clockwise, starting left of the dealer. Dealer rotates each hand.
-- **Bidding:** One round, **starting at the dealer** and going clockwise
-  (C++ `Round::DoBet`). Bids: pass, 3, 4, 5, 6, or **Haus**. Each bid must
-  beat the current high bid.
+- **Bidding:** One round, **starting left of the dealer** and going
+  clockwise, with the **dealer bidding last** (Aaron's rule, overriding
+  C++ `Round::DoBet`, which starts at the dealer). Bids: pass, 3, 4, 5, 6,
+  or **Haus**. Each bid must beat the current high bid.
   - *Haus* = a bid to take all 6 tricks, worth **12 points**. No card
     exchange, no playing alone — all four players play the hand out.
-  - If everyone passes, the **dealer is forced to bid 3** ("screw the dealer").
-    Mechanically the dealer starts the round **holding a standing bid of 3**
-    (C++ `DEFAULT_DEALER`), so a bid of 3 never counts as a raise, and the
-    dealer is "under for 3" until someone bids higher. The dealer's pass
-    therefore means accepting the under-for-3, not escaping it.
+  - If nobody has bid by the time it reaches the dealer, the dealer
+    **cannot pass** and must bid at least 3 — this is the dealer being
+    "under for 3". If someone has bid, the dealer may pass or outbid
+    like anyone else.
 - **Trump:** The high bidder names trump and leads the first trick.
   - Trump rank: **right bar** (Jack of trump) highest, then **left bar**
     (Jack of the other suit of the same colour — it counts as trump for
@@ -64,8 +64,10 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
 6. **Game target** → 31 (C++ `FIsWinner`), winner is the high scorer.
 7. **All-pass rule** → Dealer forced at 3 (C++ `DEFAULT_DEALER`).
 8. **Joker / widow** → Neither (C++ deck is exactly 24 cards).
-9. **Bid order** → Starts at the dealer, clockwise, one pass around
-   (C++ `DoBet`). The dealer's forced-3 default applies if nobody outbids it.
+9. **Bid order** → ~~Starts at the dealer, clockwise, one pass around
+   (C++ `DoBet`)~~ — **corrected by Aaron 2026-10-24: the dealer bids
+   last**, one pass around starting left of the dealer. If nobody bids
+   before the dealer, the dealer cannot pass and must bid at least 3.
 10. **Who leads?** → High bidder leads the first trick (C++).
 
 ## One deliberate exception

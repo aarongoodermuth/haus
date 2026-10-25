@@ -28,6 +28,9 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
   standing 3. Each bid must beat the current high bid.
   - *Haus* = a bid to take all 6 tricks, worth **12 points**. No card
     exchange, no playing alone — all four players play the hand out.
+    Haus is the exception to "must beat the current bid": if someone has
+    bid Haus, a later bidder may also bid Haus, and the **latest Haus
+    bid wins the bid**.
   - If nobody outbids the standing 3, the dealer **takes it**: the dealer
     cannot pass out of the hand, and must either take the under for 3 or
     raise to 4+. If someone has bid higher, the dealer may pass or

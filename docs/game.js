@@ -126,7 +126,8 @@ function botBid(hand, currentBid) {
   // passing lets someone else name trump, which can only hurt you, so the
   // bid decision gets a small control premium: bid 3 from est 2.75 up.
   const haus = BIDS.find(b => b.id === "haus");
-  if (isHausLock(hand, suit) && haus.amount > currentBid.amount) return haus;
+  // A lock hand bids Haus even over a previous Haus: the latest Haus wins.
+  if (isHausLock(hand, suit) && (haus.amount > currentBid.amount || currentBid.id === "haus")) return haus;
   const want = Math.floor(est + 0.25);
   const bid = BIDS.find(b => b.id === String(want));
   if (bid && bid.amount > currentBid.amount) return bid;
@@ -396,8 +397,11 @@ if (typeof document !== "undefined") {
       BIDS.forEach(b => {
         // Same-or-lower bids are never offered: only bids beating the
         // current high bid appear — except the dealer taking their own
-        // standing 3, which is accepting the under, not raising.
-        if (b.id !== "pass" && b.amount <= state.bid.amount && !(dealerUnder && b.amount === 3)) return;
+        // standing 3, which is accepting the under, not raising, and
+        // except Haus over Haus: the latest Haus bid wins the bid, so a
+        // Haus is always offered even when the current bid is Haus.
+        if (b.id !== "pass" && b.amount <= state.bid.amount &&
+          !(dealerUnder && b.amount === 3) && !(b.id === "haus" && state.bid.id === "haus")) return;
         if (b.id === "pass" && dealerUnder) return;
         const btn = document.createElement("button"); btn.type = "button";
         btn.textContent = b.id === "pass" ? "Pass" : (dealerUnder && b.amount === 3 ? "Under for 3" : "Bid " + b.label);
@@ -423,7 +427,9 @@ if (typeof document !== "undefined") {
   }
   function acceptBid(i, bid) {
     state.bids.push({ player: i, label: bid.id === "pass" ? "Pass" : bid.label });
-    if (bid.amount > state.bid.amount) { state.bid = bid; state.bidder = i; msg(`${state.players[i].name} bids ${bid.label}.`); }
+    // Haus over Haus wins: the latest Haus bid takes the bid even though
+    // the amounts tie — the only tie that counts as a raise.
+    if (bid.amount > state.bid.amount || (bid.id === "haus" && state.bid.id === "haus")) { state.bid = bid; state.bidder = i; msg(`${state.players[i].name} bids ${bid.label}.`); }
     else msg(`${state.players[i].name} passes.`);
     state.bidsSeen++; state.bidTurn = (state.bidTurn + 1) % 4; nextBid();
   }

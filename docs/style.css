@@ -25,6 +25,10 @@ main { max-width:640px; margin:0 auto; padding:8px 12px 32px; }
 .card { width:60px; height:84px; background:var(--card); color:var(--ink); border-radius:10px; border:2px solid transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:1.25rem; font-weight:700; line-height:1.05; padding:4px; user-select:none; }
 .card.red { color:var(--red); }
 .card.small { width:48px; height:66px; font-size:1rem; }
+.seat-hand { display:flex; flex-wrap:wrap; gap:3px; justify-content:center; margin-top:4px; }
+.seat-hand:empty { display:none; }
+.seat-hand .card.small { width:38px; height:52px; font-size:.85rem; padding:2px; }
+.seat-hand .card .sub { display:none; }
 .card.trump { border-color:var(--accent); }
 button.card { cursor:pointer; touch-action:manipulation; }
 button.card:disabled { opacity:.35; cursor:default; }

@@ -176,6 +176,13 @@ function botPlay(hand, trump, plays, ctx = {}) {
 if (typeof document !== "undefined") {
   const NAMES = ["You", "Jarvis", "Karen", "Bender"]; // bots nod to the C++ build
   const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1 };
+  // Debug options: the debug site lives in the /debug/ subdirectory and
+  // shares this exact file, so debug behavior is keyed off the page path
+  // and the main site is untouched. Each option is its own flag, so more
+  // can be added without touching the game logic.
+  const DEBUG = {
+    showHands: typeof location !== "undefined" && location.pathname.includes("/debug/"),
+  };
   const $ = id => document.getElementById(id);
   const cardLabel = c => VALUES[c.value] + SUIT_BY_ID[c.suit].symbol;
   const cardEl = (c, opts = {}) => {
@@ -211,6 +218,15 @@ if (typeof document !== "undefined") {
       const slot = $("played-" + i); slot.innerHTML = "";
       const play = state.plays.find(x => x.player === i);
       if (play) slot.appendChild(cardEl(play.card, { small: true, winner: state.trickWinner === i && state.plays.length === 4 }));
+      // Debug: opponents' whole hands face up under their seats. Hands are
+      // already sorted at deal, so they render as dealt.
+      if (DEBUG.showHands && i > 0) {
+        const handSlot = $("hand-" + i);
+        if (handSlot) {
+          handSlot.innerHTML = "";
+          p.hand.forEach(c => handSlot.appendChild(cardEl(c, { small: true })));
+        }
+      }
     });
     // The center stays quiet: the trick itself is shown by the cards in the
     // seats, the winner by the trophy by their name + the gold card, and

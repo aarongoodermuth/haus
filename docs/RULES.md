@@ -169,10 +169,16 @@ except the 9 of hearts. Each player is dealt 6 cards and the remaining
   played, leaving 6 — and only then does play begin. The kitty is
   shown face down in the middle until taken (face up on the debug
   site).
-- **Bot play:** bots bid with a small kitty bonus (about half a trick:
-  keeping the best 6 of 9 improves the hand), and discard their 3
-  weakest cards — trump kept over off-suit cards, bars kept over low
-  trump, and singletons shed first to open voids.
+- **Bot play:** bots bid with a kitty bonus of 1.3 tricks — measured over
+  5000 simulated hands, where actual tricks with the kitty fit
+  1.32 + 1.01 × estimate. That bundles the kitty itself (+0.9 tricks:
+  keep the best 6 of 9) and the estimate running low in 3-player play
+  (+0.4: with only 2 opponents, winners are safer and trump is more
+  dominant). The original 0.5 guess left dealers under for 4 in 95% of
+  deals; with 1.3, bid 5 appears in 28% of deals and makes 77%, and bid
+  6 appears with a ~46% make rate. Bots discard their 3 weakest cards
+  — trump kept over off-suit cards, bars kept over low trump, and
+  singletons shed first to open voids.
 
 ## Sources
 

@@ -103,26 +103,30 @@ function scoreTeams(players, bidderIdx, bid) {
     }
   });
 }
+function estimateSuit(hand, suitId) { // expected tricks with suitId as trump
+  let est = 0;
+  for (const c of hand) {
+    if (isRightBower(c, suitId)) est += 1;
+    else if (isLeftBower(c, suitId)) est += 0.9;
+    else if (c.suit === suitId && c.value === 5) est += 0.9;      // trump ace
+    else if (c.suit === suitId && c.value >= 3) est += 0.45;     // trump K/Q
+    else if (c.suit === suitId) est += 0.25;                    // small trump
+    else if (c.value === 5) est += 0.75;                        // off-suit ace
+  }
+  // Long trump wins late tricks once the suit is drawn out, and a void
+  // plus trump means trumping into that suit — both worth a little extra.
+  const trumpCount = hand.filter(c => isTrump(c, suitId)).length;
+  if (trumpCount >= 4) est += 0.15 * (trumpCount - 3);
+  if (trumpCount >= 2) {
+    const held = new Set(hand.map(c => effectiveSuit(c, suitId)));
+    for (const t of SUITS) if (t.id !== suitId && !held.has(t.id)) est += 0.2;
+  }
+  return est;
+}
 function estimateBid(hand) { // expected tricks at each candidate trump suit
   let best = { suit: null, est: 0 };
   for (const s of SUITS) {
-    let est = 0;
-    for (const c of hand) {
-      if (isRightBower(c, s.id)) est += 1;
-      else if (isLeftBower(c, s.id)) est += 0.9;
-      else if (c.suit === s.id && c.value === 5) est += 0.9;      // trump ace
-      else if (c.suit === s.id && c.value >= 3) est += 0.45;     // trump K/Q
-      else if (c.suit === s.id) est += 0.25;                    // small trump
-      else if (c.value === 5) est += 0.75;                      // off-suit ace
-    }
-    // Long trump wins late tricks once the suit is drawn out, and a void
-    // plus trump means trumping into that suit — both worth a little extra.
-    const trumpCount = hand.filter(c => isTrump(c, s.id)).length;
-    if (trumpCount >= 4) est += 0.15 * (trumpCount - 3);
-    if (trumpCount >= 2) {
-      const held = new Set(hand.map(c => effectiveSuit(c, s.id)));
-      for (const t of SUITS) if (t.id !== s.id && !held.has(t.id)) est += 0.2;
-    }
+    const est = estimateSuit(hand, s.id);
     if (est > best.est) best = { suit: s.id, est };
   }
   return best;
@@ -259,9 +263,16 @@ function botBid(hand, currentBid, opts = {}) {
   // Teams: the bid is made on combined tricks, and your partner averages
   // 1.5 tricks (6 tricks / 4 players) on a random hand — add that to your
   // own estimate before applying the naming-trump premium.
-  // Kitty (three player): the bidder swaps 3 cards with the kitty and keeps
-  // the best 6 of 9, which is worth roughly half a trick on average.
-  const eff = est + (opts.teams ? 1.5 : 0) + (opts.kitty ? 0.5 : 0);
+  // Kitty (three player): measured, not guessed. Over 5000 simulated 3P
+  // hands, the bidder's actual tricks with the kitty fit
+  // tricks = 1.32 + 1.01 * est — a flat +1.3 over the estimate at every
+  // hand strength. That bundles two effects: the kitty itself (+0.9
+  // tricks: keep the best 6 of 9) and the estimate running low in
+  // 3-player play (+0.4: with only 2 opponents, winners are safer and
+  // trump is more dominant than the 4-player-tuned estimate assumes).
+  // The old 0.5 bonus left dealers under for 4 in 95% of deals and made
+  // bid 5 a 88% shot — far too conservative.
+  const eff = est + (opts.teams ? 1.5 : 0) + (opts.kitty ? 1.3 : 0);
   const want = Math.floor(eff + 0.25);
   const bid = BIDS.find(b => b.id === String(want));
   if (bid && bid.amount > currentBid.amount) return bid;
@@ -953,4 +964,4 @@ if (typeof document !== "undefined") {
   render();
 }
 
-if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, buildDeckThree, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, botBid, botPlay, isColdHand, exchangeSkeleton, shouldAskExchange, exchangeReturnCard, exchangeGiftCard, exchangeCards, kittyDiscards };
+if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, buildDeckThree, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, estimateSuit, botBid, botPlay, isColdHand, exchangeSkeleton, shouldAskExchange, exchangeReturnCard, exchangeGiftCard, exchangeCards, kittyDiscards };

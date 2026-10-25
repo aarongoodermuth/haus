@@ -370,11 +370,13 @@ if (typeof document !== "undefined") {
     // order, so the player can drag cards into their own order and it sticks.
     state.players.forEach(p => p.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value));
     state.trump = null; state.plays = []; state.trickWinner = -1; state.phase = "bid";
-    // Aaron's rule, overriding C++ DoBet: the dealer bids LAST, not first.
-    // Bidding starts left of the dealer; there is no standing bid, so the
-    // first bid only has to beat pass. The dealer is under for 3 in the
-    // sense that if nobody bids, the dealer cannot pass and must bid 3+.
-    state.bid = BIDS[0]; state.bidder = -1; state.bids = [];
+    // Aaron's rules, overriding C++ DoBet on order but keeping its standing
+    // bid: the dealer bids LAST, not first, and the dealer starts the round
+    // UNDER FOR 3 — the standing bid is 3 held by the dealer. So a
+    // non-dealer's first bid must be 4+: bid 3 is never a raise. Bidding
+    // starts left of the dealer; if nobody outbids the standing 3, the
+    // dealer takes it (or raises) — the dealer cannot pass out of the hand.
+    state.bid = BIDS.find(b => b.id === "3"); state.bidder = state.dealer; state.bids = [];
     state.bidTurn = (state.dealer + 1) % 4; state.bidsSeen = 0;
     msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with ${state.players[state.bidTurn].name}, dealer bids last.`);
     hideMainBtn(); // the Deal button is done its job — it stays out of the way until the hand ends
@@ -385,30 +387,35 @@ if (typeof document !== "undefined") {
     const i = state.bidTurn;
     if (i === 0) {
       const panel = $("panel"); panel.innerHTML = "";
+      // The dealer acts last, so at the dealer's turn the standing 3 is
+      // still un-outbid exactly when nobody has bid higher: that is the
+      // dealer-under case — no Pass button (the dealer can't pass out of
+      // the hand), and taking the 3 is offered as "Under for 3", not as a
+      // raise. For a non-dealer the standing 3 simply filters Bid 3 out.
+      const dealerUnder = state.dealer === 0 && state.bidder === state.dealer && state.bid.amount === 3;
       BIDS.forEach(b => {
         // Same-or-lower bids are never offered: only bids beating the
-        // current high bid appear.
-        if (b.id !== "pass" && b.amount <= state.bid.amount) return;
-        // The dealer bids last: if nobody has bid yet, the dealer cannot
-        // pass — the dealer must bid at least 3 (the "under for 3" case).
-        if (b.id === "pass" && state.dealer === 0 && state.bidder === -1) return;
+        // current high bid appear — except the dealer taking their own
+        // standing 3, which is accepting the under, not raising.
+        if (b.id !== "pass" && b.amount <= state.bid.amount && !(dealerUnder && b.amount === 3)) return;
+        if (b.id === "pass" && dealerUnder) return;
         const btn = document.createElement("button"); btn.type = "button";
-        btn.textContent = b.id === "pass" ? "Pass" : "Bid " + b.label;
+        btn.textContent = b.id === "pass" ? "Pass" : (dealerUnder && b.amount === 3 ? "Under for 3" : "Bid " + b.label);
         if (b.id === "pass") btn.className = "secondary";
         btn.addEventListener("click", () => { panel.innerHTML = ""; acceptBid(0, b); });
         panel.appendChild(btn);
       });
-      // Same condition that hides the Pass button: a dealer facing an
-      // empty round can't pass, so the prompt must not offer it.
-      msg(state.dealer === 0 && state.bidder === -1
-        ? "Your bid — you can't pass, nobody has bid yet."
+      // Same condition that hides the Pass button: the prompt must match
+      // the buttons — no "or pass" when passing isn't an option.
+      msg(dealerUnder
+        ? "You're under for 3 — take it or bid higher."
         : "Your bid — or pass.");
     } else {
       setTimeout(() => {
         let b = botBid(state.players[i].hand, state.bid);
-        // The dealer-last rule applies to bots too: a dealer facing an
-        // empty bidding round cannot pass, so a passing bot dealer bids 3.
-        if (i === state.dealer && state.bidder === -1 && b.id === "pass") b = BIDS.find(x => x.id === "3");
+        // The dealer-last rule applies to bots too: a dealer facing the
+        // un-outbid standing 3 cannot pass, so a passing bot dealer takes it.
+        if (i === state.dealer && state.bidder === state.dealer && state.bid.amount === 3 && b.id === "pass") b = BIDS.find(x => x.id === "3");
         acceptBid(i, b);
       }, 450);
     }
@@ -421,10 +428,9 @@ if (typeof document !== "undefined") {
     state.bidsSeen++; state.bidTurn = (state.bidTurn + 1) % 4; nextBid();
   }
   function finishBidding() {
-    // Safety net (unreachable now that the dealer can't pass an empty
-    // round): if somehow nobody bid, the dealer takes 3.
-    if (state.bidder === -1) { state.bidder = state.dealer; state.bid = BIDS.find(b => b.id === "3"); }
-    // Under for 3: the dealer bid the minimum 3 because nobody else bid.
+    // Under for 3: the dealer holds the standing 3 because nobody outbid it.
+    // (The bidder can never be "nobody" now — the standing bid guarantees
+    // the dealer is the bidder at minimum.)
     state.bidForced = state.bidder === state.dealer && state.bid.amount === 3 &&
       state.bids.filter(b => b.player !== state.dealer).every(b => b.label === "Pass");
     if (state.bidForced) {

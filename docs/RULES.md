@@ -21,14 +21,17 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
 - **Deal:** 6 cards each, clockwise, starting left of the dealer. Dealer rotates each hand.
 - **Bidding:** One round, **starting left of the dealer** and going
   clockwise, with the **dealer bidding last** (Aaron's rule, overriding
-  C++ `Round::DoBet`, which starts at the dealer). Bids: pass, 3, 4, 5, 6,
-  or **Haus**. Each bid must beat the current high bid.
+  C++ `Round::DoBet`, which starts at the dealer). The dealer starts the
+  round **under for 3**: the standing bid is 3 held by the dealer (C++
+  `DEFAULT_DEALER`), so a non-dealer's first bid must be **4 or higher**
+  — bid 3 is never offered to a non-dealer, since it wouldn't beat the
+  standing 3. Each bid must beat the current high bid.
   - *Haus* = a bid to take all 6 tricks, worth **12 points**. No card
     exchange, no playing alone — all four players play the hand out.
-  - If nobody has bid by the time it reaches the dealer, the dealer
-    **cannot pass** and must bid at least 3 — this is the dealer being
-    "under for 3". If someone has bid, the dealer may pass or outbid
-    like anyone else.
+  - If nobody outbids the standing 3, the dealer **takes it**: the dealer
+    cannot pass out of the hand, and must either take the under for 3 or
+    raise to 4+. If someone has bid higher, the dealer may pass or
+    outbid like anyone else.
 - **Trump:** The high bidder names trump and leads the first trick.
   - Trump rank: **right bar** (Jack of trump) highest, then **left bar**
     (Jack of the other suit of the same colour — it counts as trump for
@@ -66,8 +69,10 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
 8. **Joker / widow** → Neither (C++ deck is exactly 24 cards).
 9. **Bid order** → ~~Starts at the dealer, clockwise, one pass around
    (C++ `DoBet`)~~ — **corrected by Aaron 2026-10-24: the dealer bids
-   last**, one pass around starting left of the dealer. If nobody bids
-   before the dealer, the dealer cannot pass and must bid at least 3.
+   last**, one pass around starting left of the dealer. The standing bid
+   is 3 held by the dealer (under for 3): non-dealers must bid 4+,
+   and if nobody outbids the standing 3 the dealer takes it (no Pass
+   for the dealer in that case) or raises.
 10. **Who leads?** → High bidder leads the first trick (C++).
 
 ## One deliberate exception

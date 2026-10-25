@@ -84,6 +84,25 @@ function scoreHand(players, bidderIdx, bid) {
     }
   });
 }
+// Teams variant: partners sit across from each other — seats 0 & 2 vs 1 & 3.
+const teamOf = i => i % 2;
+function scoreTeams(players, bidderIdx, bid) {
+  // The bid is made on the bidding team's COMBINED tricks. Both teammates
+  // carry the team total as their score, so the existing "first to 31"
+  // check works unchanged. Bidding team: made -> max(team tricks, bid
+  // amount); missed -> -bid amount. Other team: +1 per trick the team won.
+  // Haus (amount 12, required 6) works the same way: the team takes all 6.
+  const teamTricks = [0, 1].map(t => players.filter((_, i) => teamOf(i) === t).reduce((a, p) => a + p.tricks, 0));
+  const bt = teamOf(bidderIdx);
+  players.forEach((p, i) => {
+    if (teamOf(i) === bt) {
+      if (teamTricks[bt] >= bid.required) p.score += Math.max(teamTricks[bt], bid.amount);
+      else p.score -= bid.amount;
+    } else {
+      p.score += teamTricks[1 - bt];
+    }
+  });
+}
 function estimateBid(hand) { // expected tricks at each candidate trump suit
   let best = { suit: null, est: 0 };
   for (const s of SUITS) {
@@ -118,7 +137,7 @@ function isHausLock(hand, suit) {
   return hand.some(c => isRightBower(c, suit)) && hand.some(c => isLeftBower(c, suit)) &&
     (trump.length >= 6 || (trump.length === 5 && offAces >= 1) || (trump.length === 4 && offAces === 2));
 }
-function botBid(hand, currentBid) {
+function botBid(hand, currentBid, opts = {}) {
   const { est, suit } = estimateBid(hand);
   // Bidding is a double-edged sword: missing costs the bid, but winning
   // the bid names trump — and est is already computed at your best suit,
@@ -128,7 +147,11 @@ function botBid(hand, currentBid) {
   const haus = BIDS.find(b => b.id === "haus");
   // A lock hand bids Haus even over a previous Haus: the latest Haus wins.
   if (isHausLock(hand, suit) && (haus.amount > currentBid.amount || currentBid.id === "haus")) return haus;
-  const want = Math.floor(est + 0.25);
+  // Teams: the bid is made on combined tricks, and your partner averages
+  // 1.5 tricks (6 tricks / 4 players) on a random hand — add that to your
+  // own estimate before applying the naming-trump premium.
+  const eff = opts.teams ? est + 1.5 : est;
+  const want = Math.floor(eff + 0.25);
   const bid = BIDS.find(b => b.id === String(want));
   if (bid && bid.amount > currentBid.amount) return bid;
   return BIDS[0];
@@ -147,6 +170,14 @@ function leadCard(hand, trump, sweep = false) {
   if (right) return right; // nothing beats the right bar
   const left = hand.find(c => isLeftBower(c, trump));
   if (left) return left; // only the right bar beats it
+  // Sweeping with trump still in hand: lead the highest remaining trump, so
+  // the opponents' trump gets drawn out before the off-suit aces are led.
+  // (Without this, the longest-suit fallback could lead an off-suit ace
+  // first on a mixed hand, which is exactly what sweeping avoids.)
+  if (sweep && hasTrump) {
+    const tr = hand.filter(c => isTrump(c, trump));
+    return tr.reduce((best, c) => c.value > best.value ? c : best, tr[0]);
+  }
   // Otherwise lead the top card of your longest suit (ties: higher top card,
   // then a non-trump suit) — long suits are where future tricks live.
   const bySuit = {};
@@ -169,14 +200,17 @@ function discardCard(hand, trump, legal) {
     suitCount(a) - suitCount(b))[0];
 }
 function botPlay(hand, trump, plays, ctx = {}) {
-  // ctx (from the UI; optional in tests): { self, bidder, bidderLive, bidId }.
-  // bidderLive = the bidder can still make the bid, so winning matters more
-  // to them than saving trump. No partnerships here — every player scores
-  // alone — so there is no "help your partner" logic, only win/deny/preserve.
+  // ctx (from the UI; optional in tests): { self, bidder, bidderLive, bidId,
+  // partner, teams }. bidderLive = the bidder (or, in teams, the bidder's
+  // team) can still make the bid, so winning matters more than saving
+  // trump. In solo play everyone scores alone; in teams, partner logic
+  // applies (see the duck rule below).
   const ledCard = plays.length ? plays[0].card : null;
-  // Sweeping = the bidder is going for Haus and the bid is still alive:
-  // lead trump first so the off-suit aces can't be trumped (see leadCard).
-  const sweeping = ctx.self === ctx.bidder && ctx.bidderLive && ctx.bidId === "haus";
+  // Sweeping = the Haus bidder (or, in teams, their partner too) is going
+  // for Haus and the bid is still alive: lead trump first so the off-suit
+  // aces can't be trumped (see leadCard).
+  const sweeping = ctx.bidderLive && ctx.bidId === "haus" &&
+    (ctx.teams ? teamOf(ctx.self) === teamOf(ctx.bidder) : ctx.self === ctx.bidder);
   if (!ledCard) return leadCard(hand, trump, sweeping);
   const legal = legalCards(hand, trump, ledCard);
   const led = effectiveSuit(ledCard, trump);
@@ -185,6 +219,15 @@ function botPlay(hand, trump, plays, ctx = {}) {
   const currentWinner = plays.reduce((best, p) =>
     cardStrength(p.card, trump, led) > cardStrength(best.card, trump, led) ? p : best, plays[0]);
   const winning = sorted.filter(c => cardStrength(c, trump, led) > currentBest);
+  // Teams: if your partner is already winning this trick, don't waste a
+  // card on it — the trick is your team's either way. Play the cheapest
+  // card that doesn't overtake them (second-hand-low convention); if every
+  // legal card wins, the overtake is unavoidable, so fall through and take
+  // it as cheaply as possible.
+  if (ctx.teams && ctx.partner != null && currentWinner.player === ctx.partner) {
+    const safe = legal.filter(c => cardStrength(c, trump, led) <= currentBest);
+    if (safe.length) return discardCard(hand, trump, safe);
+  }
   if (winning.length) {
     const cheapest = winning[0];
     if (!isTrump(cheapest, trump)) return cheapest; // win without spending trump
@@ -208,6 +251,21 @@ function botPlay(hand, trump, plays, ctx = {}) {
 if (typeof document !== "undefined") {
   const NAMES = ["You", "Jarvis", "Karen", "Bender"]; // bots nod to the C++ build
   const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1 };
+  // Variants: "solo" (every player for themselves) or "teams" (2v2, partners
+  // across the table). Teams changes the standing bid (4, not 3), the
+  // scoring (combined team tricks), and the bot logic (partner-aware).
+  let variant = "solo";
+  const standingBid = () => BIDS.find(b => b.id === (variant === "teams" ? "4" : "3"));
+  const teamNames = [`${NAMES[0]} & ${NAMES[2]}`, `${NAMES[1]} & ${NAMES[3]}`];
+  // The Deal button has one persistent handler that dispatches on the game
+  // state (fresh game vs next hand) — a single binding, so switching
+  // variants mid-hand can never leave it dead or double-firing.
+  let mainBtnMode = "new";
+  document.getElementById("main-btn").addEventListener("click", () => {
+    if (state.phase !== "idle") return;
+    if (mainBtnMode === "next") { state.dealer = (state.dealer + 1) % 4; startHand(); }
+    else newGame();
+  });
   // Debug options: the debug site lives in the /debug/ subdirectory and
   // shares this exact file, so debug behavior is keyed off the page path
   // and the main site is untouched. Each option is its own flag, so more
@@ -226,37 +284,55 @@ if (typeof document !== "undefined") {
   };
   function msg(t) { $("message").textContent = t || ""; }
   function render() {
-    $("scoreboard").innerHTML = state.players.map((p, i) =>
-      `<span class="chip">${i === state.dealer ? "🂠 " : ""}${p.name}: <strong>${p.score}</strong> · ${p.tricks} ${p.tricks === 1 ? "trick" : "tricks"}</span>`).join("");
+    if (variant === "teams" && state.players.length) {
+      // Team chips: both teammates carry the team total, so either member's
+      // score is the team score; tricks are the team's combined tricks.
+      $("scoreboard").innerHTML = [0, 1].map(t => {
+        const members = state.players.filter((_, i) => teamOf(i) === t);
+        const tricks = members.reduce((a, p) => a + p.tricks, 0);
+        return `<span class="chip">${teamOf(state.dealer) === t ? "🂠 " : ""}${teamNames[t]}: <strong>${members[0].score}</strong> · ${tricks} ${tricks === 1 ? "trick" : "tricks"}</span>`;
+      }).join("");
+    } else {
+      $("scoreboard").innerHTML = state.players.map((p, i) =>
+        `<span class="chip">${i === state.dealer ? "🂠 " : ""}${p.name}: <strong>${p.score}</strong> · ${p.tricks} ${p.tricks === 1 ? "trick" : "tricks"}</span>`).join("");
+    }
     $("status").textContent = state.trump
       ? `Trump: ${SUIT_BY_ID[state.trump].symbol} · Bid: ${state.bid.label} by ${state.players[state.bidder]?.name || "—"}`
       : "Bidding / dealing";
-    // Bidding stage only: who dealt, who is currently under for the default
-    // 3 (C++ DoBet: the dealer holds a standing 3 until someone bids higher),
-    // and every bid made so far, so your turn shows what came before it.
+    // Bidding stage only: who dealt, who is currently under for the standing
+    // bid (the dealer holds it until someone bids higher), and every bid
+    // made so far, so your turn shows what came before it.
     const bidInfo = $("bid-info");
     if (state.phase === "bid" && state.players.length) {
       const dealerName = state.players[state.dealer].name;
       const underNote = state.bids.every(b => b.label === "Pass")
-        ? ` · ${dealerName} is under for 3 unless someone bids higher`
+        ? ` · ${dealerName} is under for ${standingBid().label} unless someone bids higher`
         : "";
       bidInfo.innerHTML = `<div>Dealer: ${dealerName}${underNote}</div>` +
         (state.bids.length
           ? `<div>Bids so far: ${state.bids.map(b => `${state.players[b.player].name} — ${b.label}`).join(" · ")}</div>`
           : "");
     } else bidInfo.innerHTML = "";
+    const seatBase = ["seat seat-south", "seat seat-west", "seat seat-north", "seat seat-east"];
     state.players.forEach((p, i) => {
       $("name-" + i).textContent = (state.trickWinner === i && state.plays.length === 4 ? "🏆 " : "") + p.name;
+      const seat = $("seat-" + i);
+      if (seat) seat.className = seatBase[i] + (variant === "teams" ? (teamOf(i) === 0 ? " team-a" : " team-b") : "");
       const slot = $("played-" + i); slot.innerHTML = "";
       const play = state.plays.find(x => x.player === i);
       if (play) slot.appendChild(cardEl(play.card, { small: true, winner: state.trickWinner === i && state.plays.length === 4 }));
       // Debug: opponents' whole hands face up under their seats. Hands are
-      // already sorted at deal, so they render as dealt.
+      // already sorted at deal, so they render as dealt. In teams, the
+      // "opponents" are the other team only — your partner's hand stays
+      // hidden, as the variant requires. Every bot slot is cleared first so
+      // switching variants can't leave a stale hand on screen.
       if (DEBUG.showHands && i > 0) {
         const handSlot = $("hand-" + i);
         if (handSlot) {
           handSlot.innerHTML = "";
-          p.hand.forEach(c => handSlot.appendChild(cardEl(c, { small: true })));
+          if (!(variant === "teams" && i === 2)) {
+            p.hand.forEach(c => handSlot.appendChild(cardEl(c, { small: true })));
+          }
         }
       }
     });
@@ -373,11 +449,12 @@ if (typeof document !== "undefined") {
     state.trump = null; state.plays = []; state.trickWinner = -1; state.phase = "bid";
     // Aaron's rules, overriding C++ DoBet on order but keeping its standing
     // bid: the dealer bids LAST, not first, and the dealer starts the round
-    // UNDER FOR 3 — the standing bid is 3 held by the dealer. So a
-    // non-dealer's first bid must be 4+: bid 3 is never a raise. Bidding
-    // starts left of the dealer; if nobody outbids the standing 3, the
-    // dealer takes it (or raises) — the dealer cannot pass out of the hand.
-    state.bid = BIDS.find(b => b.id === "3"); state.bidder = state.dealer; state.bids = [];
+    // under for the standing bid held by the dealer — 3 in solo, 4 in
+    // teams (no 3 bid exists in teams). So a non-dealer's first bid must
+    // beat the standing bid. Bidding starts left of the dealer; if nobody
+    // outbids the standing bid, the dealer takes it (or raises) — the
+    // dealer cannot pass out of the hand.
+    state.bid = standingBid(); state.bidder = state.dealer; state.bids = [];
     state.bidTurn = (state.dealer + 1) % 4; state.bidsSeen = 0;
     msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with ${state.players[state.bidTurn].name}, dealer bids last.`);
     hideMainBtn(); // the Deal button is done its job — it stays out of the way until the hand ends
@@ -388,23 +465,25 @@ if (typeof document !== "undefined") {
     const i = state.bidTurn;
     if (i === 0) {
       const panel = $("panel"); panel.innerHTML = "";
-      // The dealer acts last, so at the dealer's turn the standing 3 is
+      // The dealer acts last, so at the dealer's turn the standing bid is
       // still un-outbid exactly when nobody has bid higher: that is the
       // dealer-under case — no Pass button (the dealer can't pass out of
-      // the hand), and taking the 3 is offered as "Under for 3", not as a
-      // raise. For a non-dealer the standing 3 simply filters Bid 3 out.
-      const dealerUnder = state.dealer === 0 && state.bidder === state.dealer && state.bid.amount === 3;
+      // the hand), and taking the standing bid is offered as "Under for
+      // 3/4", not as a raise. For a non-dealer the standing bid simply
+      // filters out everything at or below it.
+      const standing = standingBid();
+      const dealerUnder = state.dealer === 0 && state.bidder === state.dealer && state.bid.amount === standing.amount;
       BIDS.forEach(b => {
         // Same-or-lower bids are never offered: only bids beating the
         // current high bid appear — except the dealer taking their own
-        // standing 3, which is accepting the under, not raising, and
+        // standing bid, which is accepting the under, not raising, and
         // except Haus over Haus: the latest Haus bid wins the bid, so a
         // Haus is always offered even when the current bid is Haus.
         if (b.id !== "pass" && b.amount <= state.bid.amount &&
-          !(dealerUnder && b.amount === 3) && !(b.id === "haus" && state.bid.id === "haus")) return;
+          !(dealerUnder && b.amount === standing.amount) && !(b.id === "haus" && state.bid.id === "haus")) return;
         if (b.id === "pass" && dealerUnder) return;
         const btn = document.createElement("button"); btn.type = "button";
-        btn.textContent = b.id === "pass" ? "Pass" : (dealerUnder && b.amount === 3 ? "Under for 3" : "Bid " + b.label);
+        btn.textContent = b.id === "pass" ? "Pass" : (dealerUnder && b.amount === standing.amount ? "Under for " + standing.label : "Bid " + b.label);
         if (b.id === "pass") btn.className = "secondary";
         btn.addEventListener("click", () => { panel.innerHTML = ""; acceptBid(0, b); });
         panel.appendChild(btn);
@@ -412,14 +491,14 @@ if (typeof document !== "undefined") {
       // Same condition that hides the Pass button: the prompt must match
       // the buttons — no "or pass" when passing isn't an option.
       msg(dealerUnder
-        ? "You're under for 3 — take it or bid higher."
+        ? `You're under for ${standing.label} — take it or bid higher.`
         : "Your bid — or pass.");
     } else {
       setTimeout(() => {
-        let b = botBid(state.players[i].hand, state.bid);
+        let b = botBid(state.players[i].hand, state.bid, { teams: variant === "teams" });
         // The dealer-last rule applies to bots too: a dealer facing the
-        // un-outbid standing 3 cannot pass, so a passing bot dealer takes it.
-        if (i === state.dealer && state.bidder === state.dealer && state.bid.amount === 3 && b.id === "pass") b = BIDS.find(x => x.id === "3");
+        // un-outbid standing bid cannot pass, so a passing bot dealer takes it.
+        if (i === state.dealer && state.bidder === state.dealer && state.bid.amount === standingBid().amount && b.id === "pass") b = standingBid();
         acceptBid(i, b);
       }, 450);
     }
@@ -434,13 +513,13 @@ if (typeof document !== "undefined") {
     state.bidsSeen++; state.bidTurn = (state.bidTurn + 1) % 4; nextBid();
   }
   function finishBidding() {
-    // Under for 3: the dealer holds the standing 3 because nobody outbid it.
+    // Under for the standing bid: the dealer holds it because nobody outbid it.
     // (The bidder can never be "nobody" now — the standing bid guarantees
     // the dealer is the bidder at minimum.)
-    state.bidForced = state.bidder === state.dealer && state.bid.amount === 3 &&
+    state.bidForced = state.bidder === state.dealer && state.bid.amount === standingBid().amount &&
       state.bids.filter(b => b.player !== state.dealer).every(b => b.label === "Pass");
     if (state.bidForced) {
-      msg(`Everyone passed — dealer ${state.players[state.dealer].name} is under for 3.`);
+      msg(`Everyone passed — dealer ${state.players[state.dealer].name} is under for ${standingBid().label}.`);
     }
     if (state.bidder === 0) {
       const panel = $("panel"); panel.innerHTML = "";
@@ -450,7 +529,7 @@ if (typeof document !== "undefined") {
         panel.appendChild(btn);
       });
       msg(state.bidForced
-        ? `You're under for 3 — pick trump:`
+        ? `You're under for ${standingBid().label} — pick trump:`
         : `You won the bid at ${state.bid.label}. Pick trump:`);
     } else {
       setTimeout(() => setTrump(botChooseTrump(state.players[state.bidder].hand)), 500);
@@ -467,13 +546,22 @@ if (typeof document !== "undefined") {
     if (state.turn === 0) { msg("Your turn — tap a card."); return; }
     setTimeout(() => {
       const p = state.players[state.turn];
+      const teams = variant === "teams";
+      const bt = teamOf(state.bidder);
+      // Bidder's bid is still alive if the tricks held plus the tricks left
+      // (one per card still in hand) can still reach the requirement — in
+      // teams, counted across the bidding team, not just the bidder.
+      const bidderLive = teams
+        ? teamOf(state.turn) === bt &&
+          state.players.filter((_, i) => teamOf(i) === bt).reduce((a, q) => a + q.tricks + q.hand.length, 0) >= state.bid.required
+        : state.turn === state.bidder && p.tricks + p.hand.length >= state.bid.required;
       const card = botPlay(p.hand, state.trump, state.plays, {
         self: state.turn,
         bidder: state.bidder,
-        // Bidder's bid is still alive if the tricks they hold plus the tricks
-        // left (one per card still in hand) can still reach the requirement.
-        bidderLive: state.turn === state.bidder && p.tricks + p.hand.length >= state.bid.required,
+        bidderLive,
         bidId: state.bid.id,
+        partner: teams ? (state.turn + 2) % 4 : null,
+        teams,
       });
       doPlay(state.turn, card);
     }, 550);
@@ -518,20 +606,59 @@ if (typeof document !== "undefined") {
   }
   function endHand() {
     const bid = state.bid, bidder = state.bidder;
-    scoreHand(state.players, bidder, bid);
-    const made = state.players[bidder].tricks >= bid.required;
+    const teams = variant === "teams";
+    if (teams) scoreTeams(state.players, bidder, bid); else scoreHand(state.players, bidder, bid);
+    const teamTricks = t => state.players.filter((_, i) => teamOf(i) === t).reduce((a, p) => a + p.tricks, 0);
+    const made = teams ? teamTricks(teamOf(bidder)) >= bid.required : state.players[bidder].tricks >= bid.required;
     const top = state.players.slice().sort((a, b) => b.score - a.score)[0]; // C++ Game: winner is the high scorer
     const winner = top.score >= WIN_SCORE ? top : null;
-    msg(`Hand over: ${state.players[bidder].name} bid ${bid.label}, took ${state.players[bidder].tricks} — ${made ? "made it" : "set!"}` +
-        (winner ? ` 🏆 ${winner.name} wins the game with ${winner.score}!` : " Tap Next Hand."));
+    const bidLine = teams
+      ? `${teamNames[teamOf(bidder)]} bid ${bid.label}, took ${teamTricks(teamOf(bidder))}`
+      : `${state.players[bidder].name} bid ${bid.label}, took ${state.players[bidder].tricks}`;
+    const winLine = winner
+      ? (teams ? ` 🏆 ${teamNames[teamOf(state.players.indexOf(top))]} win the game with ${top.score}!` : ` 🏆 ${winner.name} wins the game with ${winner.score}!`)
+      : " Tap Next Hand.";
+    msg(`Hand over: ${bidLine} — ${made ? "made it" : "set!"}` + winLine);
     showMainBtn();
     $("main-btn").textContent = winner ? "New Game" : "Next Hand";
-    $("main-btn").onclick = winner ? newGame : () => { state.dealer = (state.dealer + 1) % 4; startHand(); };
+    mainBtnMode = winner ? "new" : "next";
     state.phase = "idle"; render();
   }
-  $("main-btn").addEventListener("click", newGame, { once: true });
+  // Variant switch: Solo vs Teams (2v2). Switching resets to a fresh idle
+  // game (scores cleared, Deal button up) — a hand in progress is discarded.
+  // The choice is remembered across reloads when storage is available.
+  function applyVariant(v, save) {
+    variant = v;
+    const soloBtn = document.getElementById("variant-solo"), teamsBtn = document.getElementById("variant-teams");
+    if (soloBtn) soloBtn.className = v === "solo" ? "active" : "";
+    if (teamsBtn) teamsBtn.className = v === "teams" ? "active" : "";
+    const tagline = document.getElementById("tagline");
+    if (tagline) tagline.textContent = DEBUG.showHands
+      ? (v === "teams" ? "Debug build — Teams 2v2, opposing team's hands are face up." : "Debug build — opponents' hands are face up. Same game, same rules.")
+      : (v === "teams" ? "Teams 2v2 — you & Karen vs Jarvis & Bender. First team to 31 wins." : "Hasenpfeffer, in your pocket. First to 31 wins.");
+    if (save) { try { localStorage.setItem("haus-variant", v); } catch (_) {} }
+  }
+  function switchVariant(v) {
+    if (v === variant) return;
+    applyVariant(v, true);
+    state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
+    state.dealer = 0; state.phase = "idle"; state.trump = null; state.plays = []; state.trickWinner = -1;
+    state.bid = BIDS[0]; state.bidder = -1; state.bids = [];
+    handDrag = null;
+    $("panel").innerHTML = ""; $("hand").innerHTML = "";
+    showMainBtn(); $("main-btn").textContent = "Deal"; mainBtnMode = "new";
+    msg(v === "teams" ? "Teams (2v2) — Karen is your partner across the table. Tap Deal to start." : "Solo — every player for themselves. Tap Deal to start.");
+    render();
+  }
+  const soloBtn = document.getElementById("variant-solo"), teamsBtn = document.getElementById("variant-teams");
+  if (soloBtn) soloBtn.addEventListener("click", () => switchVariant("solo"));
+  if (teamsBtn) teamsBtn.addEventListener("click", () => switchVariant("teams"));
+  try {
+    const saved = localStorage.getItem("haus-variant");
+    applyVariant(saved === "teams" || saved === "solo" ? saved : "solo", false);
+  } catch (_) { applyVariant("solo", false); }
   state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
   render();
 }
 
-if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, estimateBid, botBid, botPlay };
+if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, botBid, botPlay };

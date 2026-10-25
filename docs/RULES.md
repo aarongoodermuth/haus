@@ -95,6 +95,31 @@ where "Haus / Hausenpfeffer" comes from. See Q2.
 Everything else about the rules is deferred — Aaron will have more to say
 later. This file is where rule changes get recorded as they're decided.
 
+## Teams variant (2v2, added 2026-10-25)
+
+The same game with partners: the four seats form two teams of players
+across from each other (south + north vs west + east). Switch between
+Solo and Teams on the page; the choice is remembered across reloads.
+
+- **Bidding alone, made together.** One player bids and names trump, as
+  in solo — but the bid is made or missed on the bidding team's
+  COMBINED tricks (bidder + partner), not the bidder's alone. You never
+  see your partner's cards.
+- **Under for 4, no 3 bid.** The standing bid is 4 held by the dealer
+  (not 3), and the 3 bid does not exist in this variant at all:
+  non-dealers must bid 5+, and a dealer facing an un-outbid standing 4
+  takes the under for 4 or raises. Bidding still starts left of the
+  dealer, dealer bids last; latest Haus still wins.
+- **Scoring ports to team totals.** Bidding team makes → the team gets
+  max(team tricks, bid); misses → the team loses the bid amount; the
+  other team gets +1 per trick it won. Both teammates carry the team
+  total, and the first team to 31 wins. Haus is still 12 points, but
+  now it means the TEAM takes all 6 tricks.
+- **Bot partner play.** Bots in teams mode don't waste cards on a trick
+  their partner is already winning (second-hand-low convention), a
+  bidding team's partner plays to keep the bid alive, and a Haus
+  bidder's partner sweeps trump first just like the bidder.
+
 ## Sources
 
 - Aaron's C++ repo `aarongoodermuth/haus` — `Rules.h/.cpp`, `Bet.h`,

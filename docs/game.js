@@ -84,7 +84,7 @@ function scoreHand(players, bidderIdx, bid) {
     }
   });
 }
-function estimateBid(hand) { // simple bot heuristic
+function estimateBid(hand) { // expected tricks at each candidate trump suit
   let best = { suit: null, est: 0 };
   for (const s of SUITS) {
     let est = 0;
@@ -96,24 +96,52 @@ function estimateBid(hand) { // simple bot heuristic
       else if (c.suit === s.id) est += 0.25;                    // small trump
       else if (c.value === 5) est += 0.75;                      // off-suit ace
     }
+    // Long trump wins late tricks once the suit is drawn out, and a void
+    // plus trump means trumping into that suit — both worth a little extra.
+    const trumpCount = hand.filter(c => isTrump(c, s.id)).length;
+    if (trumpCount >= 4) est += 0.15 * (trumpCount - 3);
+    if (trumpCount >= 2) {
+      const held = new Set(hand.map(c => effectiveSuit(c, s.id)));
+      for (const t of SUITS) if (t.id !== s.id && !held.has(t.id)) est += 0.2;
+    }
     if (est > best.est) best = { suit: s.id, est };
   }
   return best;
 }
+function isHausLock(hand, suit) {
+  // Near-certain all 6 tricks: both bars, and every other card a winner
+  // once trump is drawn out — all 6 trump, 5 trump + an off-suit ace, or
+  // 4 trump + 2 off-suit aces. (A 5-trump hand with a weak 6th card is NOT
+  // a lock: after trump is drawn, a higher card of that suit still beats it.)
+  const trump = hand.filter(c => isTrump(c, suit));
+  const offAces = hand.filter(c => !isTrump(c, suit) && c.value === 5).length;
+  return hand.some(c => isRightBower(c, suit)) && hand.some(c => isLeftBower(c, suit)) &&
+    (trump.length >= 6 || (trump.length === 5 && offAces >= 1) || (trump.length === 4 && offAces === 2));
+}
 function botBid(hand, currentBid) {
-  const { est } = estimateBid(hand);
-  if (est >= 5.6) return BIDS.find(b => b.id === "haus");
-  const want = Math.floor(est);
+  const { est, suit } = estimateBid(hand);
+  // Bidding is a double-edged sword: missing costs the bid, but winning
+  // the bid names trump — and est is already computed at your best suit,
+  // so the trump-control value is baked into the number. On top of that,
+  // passing lets someone else name trump, which can only hurt you, so the
+  // bid decision gets a small control premium: bid 3 from est 2.75 up.
+  const haus = BIDS.find(b => b.id === "haus");
+  if (isHausLock(hand, suit) && haus.amount > currentBid.amount) return haus;
+  const want = Math.floor(est + 0.25);
   const bid = BIDS.find(b => b.id === String(want));
-  if (bid && bid.amount > currentBid.amount && want >= 4) return bid;
+  if (bid && bid.amount > currentBid.amount) return bid;
   return BIDS[0];
 }
 function botChooseTrump(hand) { return estimateBid(hand).suit || "spades"; }
-function leadCard(hand, trump) {
+function leadCard(hand, trump, sweep = false) {
   // Lead from strength: a trick in hand is worth the same whenever you take
   // it, so open with a card that is hard to beat, not a middling one.
   const offAces = hand.filter(c => c.value === 5 && !isTrump(c, trump));
-  if (offAces.length) return offAces[0]; // off-suit Ace: wins unless trumped
+  // Sweeping for Haus: an off-suit Ace led while opponents still hold trump
+  // can be trumped, so hold the aces until your trump leads have drawn
+  // their trump out. Once you're out of trump yourself, aces lead again.
+  const hasTrump = hand.some(c => isTrump(c, trump));
+  if (offAces.length && !(sweep && hasTrump)) return offAces[0]; // off-suit Ace: wins unless trumped
   const right = hand.find(c => isRightBower(c, trump));
   if (right) return right; // nothing beats the right bar
   const left = hand.find(c => isLeftBower(c, trump));
@@ -140,12 +168,15 @@ function discardCard(hand, trump, legal) {
     suitCount(a) - suitCount(b))[0];
 }
 function botPlay(hand, trump, plays, ctx = {}) {
-  // ctx (from the UI; optional in tests): { self, bidder, bidderLive }.
+  // ctx (from the UI; optional in tests): { self, bidder, bidderLive, bidId }.
   // bidderLive = the bidder can still make the bid, so winning matters more
   // to them than saving trump. No partnerships here — every player scores
   // alone — so there is no "help your partner" logic, only win/deny/preserve.
   const ledCard = plays.length ? plays[0].card : null;
-  if (!ledCard) return leadCard(hand, trump);
+  // Sweeping = the bidder is going for Haus and the bid is still alive:
+  // lead trump first so the off-suit aces can't be trumped (see leadCard).
+  const sweeping = ctx.self === ctx.bidder && ctx.bidderLive && ctx.bidId === "haus";
+  if (!ledCard) return leadCard(hand, trump, sweeping);
   const legal = legalCards(hand, trump, ledCard);
   const led = effectiveSuit(ledCard, trump);
   const sorted = legal.slice().sort((a, b) => cardStrength(a, trump, led) - cardStrength(b, trump, led));
@@ -430,6 +461,7 @@ if (typeof document !== "undefined") {
         // Bidder's bid is still alive if the tricks they hold plus the tricks
         // left (one per card still in hand) can still reach the requirement.
         bidderLive: state.turn === state.bidder && p.tricks + p.hand.length >= state.bid.required,
+        bidId: state.bid.id,
       });
       doPlay(state.turn, card);
     }, 550);

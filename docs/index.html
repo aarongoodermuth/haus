@@ -6,15 +6,16 @@
 <meta name="theme-color" content="#14532d">
 <title>Haus — a Hasenpfeffer card game</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🐰%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=20261023-25">
+<link rel="stylesheet" href="style.css?v=20261023-26">
 </head>
 <body>
 <header>
   <h1>🐰 Haus</h1>
   <p class="tagline" id="tagline">Hasenpfeffer, in your pocket. First to 31 wins.</p>
   <div id="variant-switch" role="group" aria-label="Game variant">
-    <button type="button" id="variant-solo" class="active">Solo</button>
-    <button type="button" id="variant-teams">Teams 2v2</button>
+    <button type="button" id="variant-four" class="active">Four Player</button>
+    <button type="button" id="variant-teams">Four Player Teams</button>
+    <button type="button" id="variant-three">Three Player</button>
   </div>
   <div id="scoreboard" aria-live="polite"></div>
   <div id="status"></div>
@@ -24,7 +25,7 @@
   <section id="table" aria-label="Table">
     <div class="seat seat-north" id="seat-2"><div class="seat-name" id="name-2"></div><div class="played" id="played-2"></div><div class="seat-hand" id="hand-2"></div></div>
     <div class="seat seat-west" id="seat-1"><div class="seat-name" id="name-1"></div><div class="played" id="played-1"></div><div class="seat-hand" id="hand-1"></div></div>
-    <div class="seat seat-center" id="center-info"></div>
+    <div class="seat seat-center"><div id="center-info"></div><div id="kitty"></div></div>
     <div class="seat seat-east" id="seat-3"><div class="seat-name" id="name-3"></div><div class="played" id="played-3"></div><div class="seat-hand" id="hand-3"></div></div>
     <div class="seat seat-south" id="seat-0"><div class="seat-name" id="name-0">You</div><div class="played" id="played-0"></div></div>
   </section>
@@ -42,9 +43,9 @@
   <p id="message" role="status" aria-live="polite"></p>
   <button id="main-btn" type="button">Deal</button>
   <p class="rules-link"><a href="RULES.md">Draft rules &amp; open questions</a> · Rules are a working draft — see RULES.md in the repo.</p>
-  <p class="rules-link" id="build-stamp">Build 2026-10-23.25 · Haus exchange: partner card + sit-out</p>
+  <p class="rules-link" id="build-stamp">Build 2026-10-23.26 · Three Player: 21 cards, kitty, discard 3</p>
 </main>
 
-<script src="game.js?v=20261023-25"></script>
+<script src="game.js?v=20261023-26"></script>
 </body>
 </html>

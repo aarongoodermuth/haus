@@ -154,6 +154,26 @@ Strategy, as Aaron described it:
   then the rest by value. The gift costs the partner nothing, since
   they sit out afterwards.
 
+## Three Player variant (added 2026-10-25)
+
+Three players (you + two bots) on a 21-card deck: every 9 is removed
+except the 9 of hearts. Each player is dealt 6 cards and the remaining
+3 go face down in the middle as the kitty.
+
+- **Bidding like teams:** the dealer holds a standing 4 and bids last;
+  non-dealers must bid 5+; a dealer facing an un-outbid standing 4
+  takes the under for 4 or raises. Latest Haus still wins. Scoring is
+  solo (each player's own tricks, first to 31).
+- **Kitty after trump:** the bid winner names trump FIRST, then takes
+  the kitty (9 cards in hand), then discards 3 cards that are not
+  played, leaving 6 — and only then does play begin. The kitty is
+  shown face down in the middle until taken (face up on the debug
+  site).
+- **Bot play:** bots bid with a small kitty bonus (about half a trick:
+  keeping the best 6 of 9 improves the hand), and discard their 3
+  weakest cards — trump kept over off-suit cards, bars kept over low
+  trump, and singletons shed first to open voids.
+
 ## Sources
 
 - Aaron's C++ repo `aarongoodermuth/haus` — `Rules.h/.cpp`, `Bet.h`,

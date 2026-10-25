@@ -160,19 +160,17 @@ function suitGroups(hand, trump) {
   });
   return groups;
 }
+// Trump ranking: right bar > left bar > A > K > Q > 10 > 9. Values are
+// A=5, K=4, Q=3, 10=1, 9=0, so shift the face cards down one to sit below
+// the left bar's 5 (a Jack is a bar, handled above).
+function trumpRank(c, trump) {
+  if (isRightBower(c, trump)) return 6;
+  if (isLeftBower(c, trump)) return 5;
+  return c.value >= 3 ? c.value - 1 : c.value;
+}
 function isPrefixGroup(cards, trump, suit) {
   const top = suit === trump ? 6 : 5;
-  const ranks = cards.map(c => {
-    if (suit === trump) {
-      if (isRightBower(c, trump)) return 6;
-      if (isLeftBower(c, trump)) return 5;
-      // Trump order below the bars: A > K > Q > 10 > 9. Values are
-      // A=5, K=4, Q=3, 10=1, 9=0, so shift the face cards down one to
-      // sit below the left bar's 5 (a Jack is a bar, handled above).
-      return c.value >= 3 ? c.value - 1 : c.value;
-    }
-    return c.value; // A=5, K=4, Q=3, J=2, 10=1, 9=0
-  }).sort((a, b) => b - a);
+  const ranks = cards.map(c => suit === trump ? trumpRank(c, trump) : c.value).sort((a, b) => b - a);
   return ranks.every((r, i) => r === top - i);
 }
 function allGroupsPrefix(hand, trump) {
@@ -233,6 +231,21 @@ function exchangeCards(bidderHand, partnerHand, ret, gift) {
   ];
 }
 
+// ---- Three Player variant: 21-card deck + kitty ----
+// Remove every 9 except the 9 of hearts: 21 cards, 6 each + 3 in the kitty.
+function buildDeckThree() {
+  return buildDeck().filter(c => !(c.value === 0 && c.suit !== "hearts"));
+}
+// The kitty discard: after taking the kitty the bidder holds 9 cards and
+// must shed 3. Shed the weakest: trump cards rank far above off-suit cards
+// (a bar is never shed while a low card exists), and among equals shed
+// from a singleton suit first to open a void for later trumping.
+function kittyDiscards(hand, trump) {
+  const suitCount = c => hand.filter(x => x.suit === c.suit).length;
+  const score = c => isTrump(c, trump) ? 100 + trumpRank(c, trump) : c.value;
+  return hand.slice().sort((a, b) => score(a) - score(b) || suitCount(a) - suitCount(b)).slice(0, 3);
+}
+
 function botBid(hand, currentBid, opts = {}) {
   const { est, suit } = estimateBid(hand);
   // Bidding is a double-edged sword: missing costs the bid, but winning
@@ -246,7 +259,9 @@ function botBid(hand, currentBid, opts = {}) {
   // Teams: the bid is made on combined tricks, and your partner averages
   // 1.5 tricks (6 tricks / 4 players) on a random hand — add that to your
   // own estimate before applying the naming-trump premium.
-  const eff = opts.teams ? est + 1.5 : est;
+  // Kitty (three player): the bidder swaps 3 cards with the kitty and keeps
+  // the best 6 of 9, which is worth roughly half a trick on average.
+  const eff = est + (opts.teams ? 1.5 : 0) + (opts.kitty ? 0.5 : 0);
   const want = Math.floor(eff + 0.25);
   const bid = BIDS.find(b => b.id === String(want));
   if (bid && bid.amount > currentBid.amount) return bid;
@@ -348,15 +363,21 @@ function botPlay(hand, trump, plays, ctx = {}) {
 /* ---------------- Browser UI (skipped in Node tests) ---------------- */
 if (typeof document !== "undefined") {
   const NAMES = ["You", "Jarvis", "Karen", "Bender"]; // bots nod to the C++ build
-  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1, sitOut: -1, exchange: null };
-  // Variants: "solo" (every player for themselves) or "teams" (2v2, partners
-  // across the table). Teams changes the standing bid (4, not 3), the
-  // scoring (combined team tricks), and the bot logic (partner-aware).
+  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1, sitOut: -1, exchange: null, kitty: [], discardSel: [] };
+  // Variants: "solo" (four player, every player for themselves), "teams"
+  // (four player teams, 2v2, partners across the table), or "three"
+  // (three player, 21-card deck with a 3-card kitty). Teams changes the
+  // standing bid (4, not 3), the scoring (combined team tricks), and the
+  // bot logic (partner-aware); three changes the deck, the player count,
+  // and adds the kitty.
   let variant = "solo";
-  // A trick has 4 cards normally, 3 when a partner sits out after a Haus
-  // exchange (the sitter's seat is skipped entirely).
-  const trickSize = () => state.sitOut >= 0 ? 3 : 4;
-  const standingBid = () => BIDS.find(b => b.id === (variant === "teams" ? "4" : "3"));
+  const playerCount = () => variant === "three" ? 3 : 4;
+  const roster = () => NAMES.slice(0, playerCount());
+  // A trick has as many cards as there are players, except when a partner
+  // sits out after a Haus exchange (the sitter's seat is skipped entirely).
+  const trickSize = () => state.sitOut >= 0 ? 3 : playerCount();
+  // Standing bid: 3 in solo, 4 in teams and three (no 3 bid exists there).
+  const standingBid = () => BIDS.find(b => b.id === (variant === "solo" ? "3" : "4"));
   const teamNames = [`${NAMES[0]} & ${NAMES[2]}`, `${NAMES[1]} & ${NAMES[3]}`];
   // The Deal button has one persistent handler that dispatches on the game
   // state (fresh game vs next hand) — a single binding, so switching
@@ -364,7 +385,7 @@ if (typeof document !== "undefined") {
   let mainBtnMode = "new";
   document.getElementById("main-btn").addEventListener("click", () => {
     if (state.phase !== "idle") return;
-    if (mainBtnMode === "next") { state.dealer = (state.dealer + 1) % 4; startHand(); }
+    if (mainBtnMode === "next") { state.dealer = (state.dealer + 1) % playerCount(); startHand(); }
     else newGame();
   });
   // Debug options: the debug site lives in the /debug/ subdirectory and
@@ -443,6 +464,19 @@ if (typeof document !== "undefined") {
     // says is who leads, which appears nowhere else.
     const center = $("center-info");
     center.textContent = (!state.plays.length && state.trump) ? `${state.players[state.leader].name} to lead` : "";
+    // Kitty (three player): face-down backs until the bidder takes it;
+    // face up on the debug site, where everything is visible.
+    const kittyEl = $("kitty");
+    if (kittyEl) {
+      kittyEl.innerHTML = "";
+      if (state.kitty && state.kitty.length) {
+        if (DEBUG.showHands) state.kitty.forEach(c => kittyEl.appendChild(cardEl(c, { small: true })));
+        else kittyEl.textContent = "🂠 🂠 🂠";
+      }
+    }
+    // Three player uses only the first 3 seats; the east seat sits empty.
+    const east = $("seat-3");
+    if (east) east.style.display = variant === "three" ? "none" : "";
     const handEl = $("hand");
     if (handDrag && handDrag.active) return; // don't rebuild the hand mid-drag (bot timers re-render)
     handEl.innerHTML = "";
@@ -450,14 +484,18 @@ if (typeof document !== "undefined") {
     const me = state.players[0]; if (!me) return;
     const ledCard = state.plays.length ? state.plays[0].card : null;
     // During an exchange the hand is tappable too: every card is a legal
-    // choice (a return card to pass back, or a gift for the bidder).
+    // choice (a return card to pass back, or a gift for the bidder). Same
+    // during the kitty discard: every card is a legal discard pick, and
+    // picked cards get a raised, highlighted look.
     const inExchange = state.phase === "exchange-return" || state.phase === "exchange-gift";
-    const playable = (state.phase === "play" && state.turn === 0) || inExchange;
-    const legal = state.phase === "play" && state.turn === 0 ? legalCards(me.hand, state.trump, ledCard) : (inExchange ? me.hand : []);
+    const inDiscard = state.phase === "discard";
+    const playable = (state.phase === "play" && state.turn === 0) || inExchange || inDiscard;
+    const legal = state.phase === "play" && state.turn === 0 ? legalCards(me.hand, state.trump, ledCard) : ((inExchange || inDiscard) ? me.hand : []);
     me.hand.forEach(c => {
       const el = cardEl(c, {});
       el._card = c;
       if (playable && !legal.includes(c)) el.className += " disabled";
+      if (inDiscard && state.discardSel.includes(c)) el.className += " selected";
       attachHandCard(el, c, playable && legal.includes(c));
       handEl.appendChild(el);
     });
@@ -538,21 +576,24 @@ if (typeof document !== "undefined") {
   // Long-press on a card must not pop a context menu mid-drag.
   $("hand").addEventListener("contextmenu", e => { if (e.preventDefault) e.preventDefault(); });
   function newGame() {
-    state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
-    state.dealer = Math.floor(Math.random() * 4);
+    state.players = roster().map(name => ({ name, score: 0, tricks: 0, hand: [] }));
+    state.dealer = Math.floor(Math.random() * playerCount());
     startHand();
   }
   function hideMainBtn() { $("main-btn").style.display = "none"; }
   function showMainBtn() { $("main-btn").style.display = "block"; }
   function startHand() {
-    const deck = shuffle(buildDeck());
+    // Three player uses the 21-card deck (9s removed except hearts); the
+    // 3 cards left after dealing 6 each become the kitty in the middle.
+    const deck = shuffle(variant === "three" ? buildDeckThree() : buildDeck());
     state.players.forEach(p => { p.tricks = 0; p.hand = []; });
-    for (let r = 0; r < CARDS_PER_PLAYER; r++) for (let i = 0; i < 4; i++) state.players[(state.dealer + 1 + i) % 4].hand.push(deck.pop());
+    for (let r = 0; r < CARDS_PER_PLAYER; r++) for (let i = 0; i < playerCount(); i++) state.players[(state.dealer + 1 + i) % playerCount()].hand.push(deck.pop());
+    state.kitty = variant === "three" ? [deck.pop(), deck.pop(), deck.pop()] : [];
     // Sort once, here at the deal. From then on the array order IS the display
     // order, so the player can drag cards into their own order and it sticks.
     state.players.forEach(p => p.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value));
     state.trump = null; state.plays = []; state.trickWinner = -1; state.phase = "bid";
-    state.sitOut = -1; state.exchange = null;
+    state.sitOut = -1; state.exchange = null; state.discardSel = [];
     // Aaron's rules, overriding C++ DoBet on order but keeping its standing
     // bid: the dealer bids LAST, not first, and the dealer starts the round
     // under for the standing bid held by the dealer — 3 in solo, 4 in
@@ -561,13 +602,13 @@ if (typeof document !== "undefined") {
     // outbids the standing bid, the dealer takes it (or raises) — the
     // dealer cannot pass out of the hand.
     state.bid = standingBid(); state.bidder = state.dealer; state.bids = [];
-    state.bidTurn = (state.dealer + 1) % 4; state.bidsSeen = 0;
+    state.bidTurn = (state.dealer + 1) % playerCount(); state.bidsSeen = 0;
     msg(`Hand dealt. Dealer: ${state.players[state.dealer].name} — bidding starts with ${state.players[state.bidTurn].name}, dealer bids last.`);
     hideMainBtn(); // the Deal button is done its job — it stays out of the way until the hand ends
     render(); nextBid();
   }
   function nextBid() {
-    if (state.bidsSeen >= 4) return finishBidding();
+    if (state.bidsSeen >= playerCount()) return finishBidding();
     const i = state.bidTurn;
     if (i === 0) {
       const panel = $("panel"); panel.innerHTML = "";
@@ -601,7 +642,7 @@ if (typeof document !== "undefined") {
         : "Your bid — or pass.");
     } else {
       setTimeout(() => {
-        let b = botBid(state.players[i].hand, state.bid, { teams: variant === "teams" });
+        let b = botBid(state.players[i].hand, state.bid, { teams: variant === "teams", kitty: variant === "three" });
         // The dealer-last rule applies to bots too: a dealer facing the
         // un-outbid standing bid cannot pass, so a passing bot dealer takes it.
         if (i === state.dealer && state.bidder === state.dealer && state.bid.amount === standingBid().amount && b.id === "pass") b = standingBid();
@@ -616,7 +657,7 @@ if (typeof document !== "undefined") {
     // the amounts tie — the only tie that counts as a raise.
     if (bid.amount > state.bid.amount || (bid.id === "haus" && state.bid.id === "haus")) { state.bid = bid; state.bidder = i; msg(`${state.players[i].name} bids ${bid.label}.`); }
     else msg(`${state.players[i].name} passes.`);
-    state.bidsSeen++; state.bidTurn = (state.bidTurn + 1) % 4; nextBid();
+    state.bidsSeen++; state.bidTurn = (state.bidTurn + 1) % playerCount(); nextBid();
   }
   function finishBidding() {
     // Under for the standing bid: the dealer holds it because nobody outbid it.
@@ -712,9 +753,45 @@ if (typeof document !== "undefined") {
     }
   }
   function setTrump(suit) {
-    state.trump = suit; state.phase = "play"; state.leader = state.bidder; state.turn = state.bidder; state.plays = [];
+    state.trump = suit; state.leader = state.bidder; state.plays = [];
     msg(`Trump is ${suit}. ${state.players[state.bidder].name} leads.`);
-    render(); nextPlay();
+    // Three player: the bidder takes the kitty and discards 3 before play
+    // begins; every other variant goes straight to the first trick.
+    if (variant === "three") beginKitty();
+    else { state.phase = "play"; state.turn = state.bidder; render(); nextPlay(); }
+  }
+  function startPlay() {
+    state.phase = "play"; state.turn = state.bidder; render(); nextPlay();
+  }
+  // ---- Kitty (three player) ----
+  // The bidder adds the 3 kitty cards (9 in hand), then sheds 3, keeping 6.
+  function beginKitty() {
+    const bidder = state.bidder, bp = state.players[bidder];
+    bp.hand = bp.hand.concat(state.kitty);
+    bp.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value);
+    state.kitty = [];
+    if (bidder === 0) {
+      state.phase = "discard"; state.discardSel = [];
+      const panel = $("panel"); panel.innerHTML = "";
+      const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "Discard 3 ▸";
+      btn.addEventListener("click", () => {
+        if (state.discardSel.length !== 3) { msg("Tap 3 cards to discard first."); return; }
+        panel.innerHTML = "";
+        bp.hand = bp.hand.filter(c => !state.discardSel.includes(c));
+        state.discardSel = [];
+        msg("Kitty taken, 3 cards discarded — play begins.");
+        startPlay();
+      });
+      panel.appendChild(btn);
+      msg("You take the kitty — tap 3 cards to discard, then discard them.");
+      render();
+    } else {
+      const discards = kittyDiscards(bp.hand, state.trump);
+      bp.hand = bp.hand.filter(c => !discards.includes(c));
+      msg(`${bp.name} takes the kitty and discards 3 cards.`);
+      render();
+      setTimeout(startPlay, 700);
+    }
   }
   function nextPlay() {
     render();
@@ -768,6 +845,16 @@ if (typeof document !== "undefined") {
     render();
   }
   function playHumanCard(card) {
+    // Kitty discard taps: tap to pick (or unpick) a card for the discard.
+    if (state.phase === "discard") {
+      const sel = state.discardSel;
+      const at = sel.indexOf(card);
+      if (at >= 0) sel.splice(at, 1);
+      else if (sel.length < 3) sel.push(card);
+      else msg("Already picked 3 — tap one to unpick it.");
+      render();
+      return;
+    }
     // Exchange taps: the human either commits a return card (blind — the
     // partner's gift is revealed only after this choice) or picks a gift
     // card for a bot bidder who asked them.
@@ -794,8 +881,8 @@ if (typeof document !== "undefined") {
       pauseAfterTrick(winner);
     } else {
       // Advance, skipping the sitting partner's seat entirely.
-      let nt = (i + 1) % 4;
-      if (nt === state.sitOut) nt = (nt + 1) % 4;
+      let nt = (i + 1) % playerCount();
+      if (nt === state.sitOut) nt = (nt + 1) % playerCount();
       state.turn = nt; render(); nextPlay();
     }
     render();
@@ -825,36 +912,45 @@ if (typeof document !== "undefined") {
   // The choice is remembered across reloads when storage is available.
   function applyVariant(v, save) {
     variant = v;
-    const soloBtn = document.getElementById("variant-solo"), teamsBtn = document.getElementById("variant-teams");
-    if (soloBtn) soloBtn.className = v === "solo" ? "active" : "";
+    const fourBtn = document.getElementById("variant-four"), teamsBtn = document.getElementById("variant-teams"), threeBtn = document.getElementById("variant-three");
+    if (fourBtn) fourBtn.className = v === "solo" ? "active" : "";
     if (teamsBtn) teamsBtn.className = v === "teams" ? "active" : "";
+    if (threeBtn) threeBtn.className = v === "three" ? "active" : "";
     const tagline = document.getElementById("tagline");
     if (tagline) tagline.textContent = DEBUG.showHands
-      ? (v === "teams" ? "Debug build — Teams 2v2, opposing team's hands are face up." : "Debug build — opponents' hands are face up. Same game, same rules.")
-      : (v === "teams" ? "Teams 2v2 — you & Karen vs Jarvis & Bender. First team to 31 wins." : "Hasenpfeffer, in your pocket. First to 31 wins.");
+      ? (v === "teams" ? "Debug build — Teams 2v2, opposing team's hands are face up."
+        : v === "three" ? "Debug build — Three player, kitty and hands face up."
+        : "Debug build — opponents' hands are face up. Same game, same rules.")
+      : (v === "teams" ? "Teams 2v2 — you & Karen vs Jarvis & Bender. First team to 31 wins."
+        : v === "three" ? "Three player — 21 cards, a 3-card kitty, first to 31 wins."
+        : "Hasenpfeffer, in your pocket. First to 31 wins.");
     if (save) { try { localStorage.setItem("haus-variant", v); } catch (_) {} }
   }
   function switchVariant(v) {
     if (v === variant) return;
     applyVariant(v, true);
-    state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
+    state.players = roster().map(name => ({ name, score: 0, tricks: 0, hand: [] }));
     state.dealer = 0; state.phase = "idle"; state.trump = null; state.plays = []; state.trickWinner = -1;
     state.bid = BIDS[0]; state.bidder = -1; state.bids = []; state.sitOut = -1; state.exchange = null;
+    state.kitty = []; state.discardSel = [];
     handDrag = null;
     $("panel").innerHTML = ""; $("hand").innerHTML = "";
     showMainBtn(); $("main-btn").textContent = "Deal"; mainBtnMode = "new";
-    msg(v === "teams" ? "Teams (2v2) — Karen is your partner across the table. Tap Deal to start." : "Solo — every player for themselves. Tap Deal to start.");
+    msg(v === "teams" ? "Teams (2v2) — Karen is your partner across the table. Tap Deal to start."
+      : v === "three" ? "Three player — 21 cards and a 3-card kitty. Tap Deal to start."
+      : "Solo — every player for themselves. Tap Deal to start.");
     render();
   }
-  const soloBtn = document.getElementById("variant-solo"), teamsBtn = document.getElementById("variant-teams");
-  if (soloBtn) soloBtn.addEventListener("click", () => switchVariant("solo"));
+  const fourBtn = document.getElementById("variant-four"), teamsBtn = document.getElementById("variant-teams"), threeBtn = document.getElementById("variant-three");
+  if (fourBtn) fourBtn.addEventListener("click", () => switchVariant("solo"));
   if (teamsBtn) teamsBtn.addEventListener("click", () => switchVariant("teams"));
+  if (threeBtn) threeBtn.addEventListener("click", () => switchVariant("three"));
   try {
     const saved = localStorage.getItem("haus-variant");
-    applyVariant(saved === "teams" || saved === "solo" ? saved : "solo", false);
+    applyVariant(saved === "teams" || saved === "solo" || saved === "three" ? saved : "solo", false);
   } catch (_) { applyVariant("solo", false); }
-  state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
+  state.players = roster().map(name => ({ name, score: 0, tricks: 0, hand: [] }));
   render();
 }
 
-if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, botBid, botPlay, isColdHand, exchangeSkeleton, shouldAskExchange, exchangeReturnCard, exchangeGiftCard, exchangeCards };
+if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, buildDeckThree, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, botBid, botPlay, isColdHand, exchangeSkeleton, shouldAskExchange, exchangeReturnCard, exchangeGiftCard, exchangeCards, kittyDiscards };

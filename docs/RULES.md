@@ -120,6 +120,40 @@ Solo and Teams on the page; the choice is remembered across reloads.
   bidding team's partner plays to keep the bid alive, and a Haus
   bidder's partner sweeps trump first just like the bidder.
 
+## Haus exchange (teams only, added 2026-10-25)
+
+An obscure rule for the teams variant. If a player bids Haus and wins
+the bid, then BEFORE naming trump they may ask their partner for a
+card:
+
+1. The partner passes one card to the bidder.
+2. The bidder, BEFORE looking at the passed card, passes one card back.
+3. The partner then sits out the hand — they play no cards. The bidder
+   names trump on the final hand and must take all 6 tricks alone
+   (their partner's tricks stay at 0, so the team total is the bidder's
+   alone). Tricks are played 3-handed, skipping the sitter's seat.
+4. The exchange is optional: the bidder may decline and name trump on
+   the dealt hand with their partner playing as normal.
+
+Strategy, as Aaron described it:
+
+- **When to ask:** only when one card away from a *cold* hand — a hand
+  nobody can beat in any order, played alone. Typically five cold cards
+  plus one weak back-end card of a non-trump suit (a 9 or queen, say)
+  that the bidder hopes to upgrade. A hand is cold when every suit
+  group in it is a top-prefix of that suit's ranking (trump: right bar
+  > left bar > A > K > Q > 10 > 9; off-suits: A > K > Q > J > 10 > 9)
+  and, if the hand holds any off-suit cards, it holds at least 4 trump
+  (leading the trump prefix draws the opponents' trump out before the
+  off-suit prefixes are led). Bots ask exactly when removing one card
+  leaves such a skeleton with at least 3 trump, and pass back that weak
+  card — the one being upgraded — committed before seeing the gift.
+- **What the partner gives:** trump is named after the exchange, so the
+  partner cannot condition on it — rank by universal value: an ace
+  first, then a king, then a bar (any Jack is a bar under some trump),
+  then the rest by value. The gift costs the partner nothing, since
+  they sit out afterwards.
+
 ## Sources
 
 - Aaron's C++ repo `aarongoodermuth/haus` — `Rules.h/.cpp`, `Bet.h`,

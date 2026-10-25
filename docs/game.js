@@ -137,6 +137,102 @@ function isHausLock(hand, suit) {
   return hand.some(c => isRightBower(c, suit)) && hand.some(c => isLeftBower(c, suit)) &&
     (trump.length >= 6 || (trump.length === 5 && offAces >= 1) || (trump.length === 4 && offAces === 2));
 }
+// ---- Haus exchange (teams only): the "cold hand" machinery ----
+// A hand is COLD for a trump suit when, played alone (partner sitting out),
+// no opponent distribution can beat it with correct play order:
+//  - Every suit group in the hand must be a top-prefix of that suit's
+//    ranking: trump ranks right bar > left bar > A > K > Q > 10 > 9, and an
+//    off-suit ranks A > K > Q > J > 10 > 9 (the same-color suit's Jack is
+//    the left bar, so that suit's ranking is just A > K > Q > 10 > 9).
+//    A prefix means the bidder holds every card above each card they hold,
+//    so each lead beats anything an opponent can answer with.
+//  - If the hand has any off-suit cards, the bidder must also hold at
+//    least 4 trump: leading the trump prefix draws the opponents' trump
+//    out (worst case, one opponent holds all 7-k remaining trump, and k
+//    leads exhaust them only when k >= 4), so the off-suit prefixes can
+//    then be led safely. A pure-trump hand needs no such condition —
+//    every lead is a trump lead the opponents cannot beat.
+function suitGroups(hand, trump) {
+  const groups = {};
+  hand.forEach(c => {
+    const s = effectiveSuit(c, trump);
+    (groups[s] ||= []).push(c);
+  });
+  return groups;
+}
+function isPrefixGroup(cards, trump, suit) {
+  const top = suit === trump ? 6 : 5;
+  const ranks = cards.map(c => {
+    if (suit === trump) {
+      if (isRightBower(c, trump)) return 6;
+      if (isLeftBower(c, trump)) return 5;
+      // Trump order below the bars: A > K > Q > 10 > 9. Values are
+      // A=5, K=4, Q=3, 10=1, 9=0, so shift the face cards down one to
+      // sit below the left bar's 5 (a Jack is a bar, handled above).
+      return c.value >= 3 ? c.value - 1 : c.value;
+    }
+    return c.value; // A=5, K=4, Q=3, J=2, 10=1, 9=0
+  }).sort((a, b) => b - a);
+  return ranks.every((r, i) => r === top - i);
+}
+function allGroupsPrefix(hand, trump) {
+  const groups = suitGroups(hand, trump);
+  return Object.keys(groups).every(s => isPrefixGroup(groups[s], trump, s));
+}
+function isColdHand(hand, trump) {
+  if (!allGroupsPrefix(hand, trump)) return false;
+  const trumpCount = hand.filter(c => isTrump(c, trump)).length;
+  const hasOffSuit = hand.some(c => !isTrump(c, trump));
+  return !hasOffSuit || trumpCount >= 4;
+}
+// One card away from cold: removing exactly one card leaves a hand whose
+// groups are all prefixes and whose trump count is at least 3, so a trump
+// gift from the partner (bringing trump to 4) can complete the cold hand.
+// Returns that card (the weak card to pass back), or null.
+function exchangeSkeleton(hand, trump) {
+  let best = null, bestStrength = Infinity;
+  hand.forEach(c => {
+    const rest = hand.filter(x => x !== c);
+    if (!allGroupsPrefix(rest, trump)) return;
+    if (rest.filter(x => isTrump(x, trump)).length < 3) return;
+    const strength = isTrump(c, trump) ? 100 + c.value : c.value;
+    if (strength < bestStrength) { bestStrength = strength; best = c; }
+  });
+  return best;
+}
+// The bidder asks for the exchange exactly when one card away from cold:
+// already cold -> no need to bench the partner; further away -> the gift
+// can't complete the hand, so the partner's help is worth more.
+function shouldAskExchange(hand) {
+  const trump = estimateBid(hand).suit;
+  return !isColdHand(hand, trump) && exchangeSkeleton(hand, trump) !== null;
+}
+// The return card, committed blind (before seeing the gift): the weak card
+// the skeleton identified — the one being upgraded. Falls back to the
+// weakest card if no skeleton exists.
+function exchangeReturnCard(hand, trump) {
+  return exchangeSkeleton(hand, trump) ||
+    hand.slice().sort((a, b) => (isTrump(a, trump) ? 100 + a.value : a.value) - (isTrump(b, trump) ? 100 + b.value : b.value))[0];
+}
+// The partner's gift. Trump is named AFTER the exchange, so the partner
+// cannot condition on it: rank by universal value, as Aaron put it — an
+// ace first, then a king, then a bar (any Jack is a bar under some trump),
+// then the rest by value. The partner sits out afterwards, so the gift
+// costs them nothing.
+function exchangeGiftCard(hand) {
+  const score = c => (c.value === 5 ? 300 : c.value === 4 ? 200 : c.value === 2 ? 100 : 0) + c.value;
+  return hand.slice().sort((a, b) => score(b) - score(a))[0];
+}
+// The swap itself: bidder gives ret, partner gives gift; both hands stay
+// at 6 cards, sorted the way the deal sorts them.
+function exchangeCards(bidderHand, partnerHand, ret, gift) {
+  const sortHand = h => h.slice().sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value);
+  return [
+    sortHand(bidderHand.filter(c => c !== ret).concat([gift])),
+    sortHand(partnerHand.filter(c => c !== gift).concat([ret])),
+  ];
+}
+
 function botBid(hand, currentBid, opts = {}) {
   const { est, suit } = estimateBid(hand);
   // Bidding is a double-edged sword: missing costs the bid, but winning
@@ -237,7 +333,9 @@ function botPlay(hand, trump, plays, ctx = {}) {
     // or when you are the bidder and the bid is still alive — else save
     // the trump and shed a cheap card instead.
     const canShed = legal.some(c => !isTrump(c, trump));
-    const lastToAct = plays.length === 3;
+    // Last to act depends on how many seats are playing the trick: 4
+  // normally, 3 when a partner sits out after a Haus exchange.
+  const lastToAct = plays.length === (ctx.playersInTrick || 4) - 1;
     const deniesBidder = ctx.bidder != null && currentWinner.player === ctx.bidder && ctx.self !== ctx.bidder;
     if (!canShed || lastToAct || deniesBidder || ctx.bidderLive) return cheapest;
     return discardCard(hand, trump, legal);
@@ -250,11 +348,14 @@ function botPlay(hand, trump, plays, ctx = {}) {
 /* ---------------- Browser UI (skipped in Node tests) ---------------- */
 if (typeof document !== "undefined") {
   const NAMES = ["You", "Jarvis", "Karen", "Bender"]; // bots nod to the C++ build
-  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1 };
+  const state = { players: [], dealer: 0, phase: "idle", trump: null, bidder: -1, bid: BIDS[0], plays: [], turn: 0, leader: 0, trickWinner: -1, sitOut: -1, exchange: null };
   // Variants: "solo" (every player for themselves) or "teams" (2v2, partners
   // across the table). Teams changes the standing bid (4, not 3), the
   // scoring (combined team tricks), and the bot logic (partner-aware).
   let variant = "solo";
+  // A trick has 4 cards normally, 3 when a partner sits out after a Haus
+  // exchange (the sitter's seat is skipped entirely).
+  const trickSize = () => state.sitOut >= 0 ? 3 : 4;
   const standingBid = () => BIDS.find(b => b.id === (variant === "teams" ? "4" : "3"));
   const teamNames = [`${NAMES[0]} & ${NAMES[2]}`, `${NAMES[1]} & ${NAMES[3]}`];
   // The Deal button has one persistent handler that dispatches on the game
@@ -315,12 +416,12 @@ if (typeof document !== "undefined") {
     } else bidInfo.innerHTML = "";
     const seatBase = ["seat seat-south", "seat seat-west", "seat seat-north", "seat seat-east"];
     state.players.forEach((p, i) => {
-      $("name-" + i).textContent = (state.trickWinner === i && state.plays.length === 4 ? "🏆 " : "") + p.name;
+      $("name-" + i).textContent = (state.trickWinner === i && state.plays.length === trickSize() ? "🏆 " : "") + p.name;
       const seat = $("seat-" + i);
-      if (seat) seat.className = seatBase[i] + (variant === "teams" ? (teamOf(i) === 0 ? " team-a" : " team-b") : "");
+      if (seat) seat.className = seatBase[i] + (variant === "teams" ? (teamOf(i) === 0 ? " team-a" : " team-b") : "") + (i === state.sitOut ? " sitting" : "");
       const slot = $("played-" + i); slot.innerHTML = "";
       const play = state.plays.find(x => x.player === i);
-      if (play) slot.appendChild(cardEl(play.card, { small: true, winner: state.trickWinner === i && state.plays.length === 4 }));
+      if (play) slot.appendChild(cardEl(play.card, { small: true, winner: state.trickWinner === i && state.plays.length === trickSize() }));
       // Debug: opponents' whole hands face up under their seats. Hands are
       // already sorted at deal, so they render as dealt. In teams, the
       // "opponents" are the other team only — your partner's hand stays
@@ -345,10 +446,14 @@ if (typeof document !== "undefined") {
     const handEl = $("hand");
     if (handDrag && handDrag.active) return; // don't rebuild the hand mid-drag (bot timers re-render)
     handEl.innerHTML = "";
+    handEl.className = state.sitOut === 0 ? "sitting" : "";
     const me = state.players[0]; if (!me) return;
     const ledCard = state.plays.length ? state.plays[0].card : null;
-    const playable = state.phase === "play" && state.turn === 0;
-    const legal = playable ? legalCards(me.hand, state.trump, ledCard) : [];
+    // During an exchange the hand is tappable too: every card is a legal
+    // choice (a return card to pass back, or a gift for the bidder).
+    const inExchange = state.phase === "exchange-return" || state.phase === "exchange-gift";
+    const playable = (state.phase === "play" && state.turn === 0) || inExchange;
+    const legal = state.phase === "play" && state.turn === 0 ? legalCards(me.hand, state.trump, ledCard) : (inExchange ? me.hand : []);
     me.hand.forEach(c => {
       const el = cardEl(c, {});
       el._card = c;
@@ -447,6 +552,7 @@ if (typeof document !== "undefined") {
     // order, so the player can drag cards into their own order and it sticks.
     state.players.forEach(p => p.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value));
     state.trump = null; state.plays = []; state.trickWinner = -1; state.phase = "bid";
+    state.sitOut = -1; state.exchange = null;
     // Aaron's rules, overriding C++ DoBet on order but keeping its standing
     // bid: the dealer bids LAST, not first, and the dealer starts the round
     // under for the standing bid held by the dealer — 3 in solo, 4 in
@@ -521,6 +627,14 @@ if (typeof document !== "undefined") {
     if (state.bidForced) {
       msg(`Everyone passed — dealer ${state.players[state.dealer].name} is under for ${standingBid().label}.`);
     }
+    // Teams Haus exchange: before trump is named, the Haus bidder may ask
+    // their partner for a card (partner then sits out). Otherwise straight
+    // to the trump pick.
+    if (variant === "teams" && state.bid.id === "haus") startExchange();
+    else showTrumpPick();
+    render();
+  }
+  function showTrumpPick(customMsg) {
     if (state.bidder === 0) {
       const panel = $("panel"); panel.innerHTML = "";
       SUITS.forEach(s => {
@@ -528,13 +642,74 @@ if (typeof document !== "undefined") {
         btn.addEventListener("click", () => { panel.innerHTML = ""; setTrump(s.id); });
         panel.appendChild(btn);
       });
-      msg(state.bidForced
+      msg(customMsg || (state.bidForced
         ? `You're under for ${standingBid().label} — pick trump:`
-        : `You won the bid at ${state.bid.label}. Pick trump:`);
+        : `You won the bid at ${state.bid.label}. Pick trump:`));
     } else {
       setTimeout(() => setTrump(botChooseTrump(state.players[state.bidder].hand)), 500);
     }
+  }
+  // ---- Haus exchange (teams only) ----
+  // Order of operations, per the rule: the bidder asks BEFORE naming trump;
+  // the partner passes a card; the bidder passes one back BEFORE looking
+  // at the gift; then the partner sits out and the bidder names trump on
+  // the final hand and plays alone for all 6 tricks.
+  function startExchange() {
+    const bidder = state.bidder, partner = (bidder + 2) % 4;
+    state.exchange = { bidder, partner, gift: null, ret: null };
+    if (bidder === 0) {
+      // Human bidder: the exchange is optional. Sitting the partner out is
+      // a real cost, so the choice is explicit.
+      const panel = $("panel"); panel.innerHTML = "";
+      const ask = document.createElement("button"); ask.type = "button"; ask.textContent = "Ask partner for a card";
+      ask.addEventListener("click", () => { panel.innerHTML = ""; beginReturnPick(); });
+      const no = document.createElement("button"); no.type = "button"; no.textContent = "No, pick trump"; no.className = "secondary";
+      no.addEventListener("click", () => { panel.innerHTML = ""; state.exchange = null; showTrumpPick(); });
+      panel.appendChild(ask); panel.appendChild(no);
+      msg(`You won the bid at Haus! You may ask ${NAMES[partner].name} for a card — but ${NAMES[partner].name} will sit out the hand if you do.`);
+    } else {
+      // Bot bidder: asks only when one card away from cold (see engine).
+      const hand = state.players[bidder].hand;
+      if (!shouldAskExchange(hand)) { state.exchange = null; showTrumpPick(); return; }
+      // The return card is committed NOW, from the bidder's hand alone —
+      // the bidder must not see the gift before choosing what to pass back.
+      state.exchange.ret = exchangeReturnCard(hand, estimateBid(hand).suit);
+      if (partner === 0) {
+        state.phase = "exchange-gift";
+        msg(`${NAMES[bidder].name} bid Haus and asks you for a card — choose one to pass. ${NAMES[bidder].name} will pass one back unseen, then you sit out.`);
+        render();
+      } else {
+        msg(`${NAMES[bidder].name} bid Haus and asks ${NAMES[partner].name} for a card…`);
+        setTimeout(() => completeExchange(exchangeGiftCard(state.players[partner].hand)), 700);
+      }
+    }
+  }
+  function beginReturnPick() {
+    // The bot partner's gift is chosen now but NOT revealed: the human must
+    // commit a return card first, sight unseen.
+    const partner = state.exchange.partner;
+    state.exchange.gift = exchangeGiftCard(state.players[partner].hand);
+    state.phase = "exchange-return";
+    msg(`Choose a card to pass back — you won't see ${NAMES[partner].name}'s card until you've chosen.`);
     render();
+  }
+  function completeExchange(gift) {
+    const { bidder, partner, ret } = state.exchange;
+    // From here on the exchange is over: further hand taps must be inert
+    // until the trump pick (human bidder) or the bot's trump choice lands.
+    state.phase = "exchange-done";
+    const bp = state.players[bidder], pp = state.players[partner];
+    [bp.hand, pp.hand] = exchangeCards(bp.hand, pp.hand, ret, gift);
+    state.sitOut = partner;
+    state.exchange = null;
+    if (bidder === 0) {
+      render();
+      showTrumpPick(`${NAMES[partner].name} passes you the ${cardLabel(gift)}. ${NAMES[partner].name} sits out — you play alone for Haus. Pick trump:`);
+    } else {
+      msg(`${NAMES[bidder].name} takes the ${cardLabel(gift)} and passes ${NAMES[partner].name} the ${cardLabel(ret)} unseen. ${NAMES[partner].name} sits out — ${NAMES[bidder].name} plays alone for Haus.`);
+      render();
+      setTimeout(() => setTrump(botChooseTrump(bp.hand)), 600);
+    }
   }
   function setTrump(suit) {
     state.trump = suit; state.phase = "play"; state.leader = state.bidder; state.turn = state.bidder; state.plays = [];
@@ -550,10 +725,12 @@ if (typeof document !== "undefined") {
       const bt = teamOf(state.bidder);
       // Bidder's bid is still alive if the tricks held plus the tricks left
       // (one per card still in hand) can still reach the requirement — in
-      // teams, counted across the bidding team, not just the bidder.
+      // teams, counted across the bidding team, not just the bidder. A
+      // sitting partner's cards are dead, so they count for nothing here.
+      const teamAlive = state.players.filter((_, i) => teamOf(i) === bt && i !== state.sitOut)
+        .reduce((a, q) => a + q.tricks + q.hand.length, 0);
       const bidderLive = teams
-        ? teamOf(state.turn) === bt &&
-          state.players.filter((_, i) => teamOf(i) === bt).reduce((a, q) => a + q.tricks + q.hand.length, 0) >= state.bid.required
+        ? teamOf(state.turn) === bt && teamAlive >= state.bid.required
         : state.turn === state.bidder && p.tricks + p.hand.length >= state.bid.required;
       const card = botPlay(p.hand, state.trump, state.plays, {
         self: state.turn,
@@ -562,6 +739,7 @@ if (typeof document !== "undefined") {
         bidId: state.bid.id,
         partner: teams ? (state.turn + 2) % 4 : null,
         teams,
+        playersInTrick: trickSize(),
       });
       doPlay(state.turn, card);
     }, 550);
@@ -572,7 +750,10 @@ if (typeof document !== "undefined") {
     // last trick, to the hand summary (which itself waits on "Next Hand").
     state.phase = "trickEnd";
     state.trickWinner = winner;
-    const lastTrick = state.players[0].hand.length === 0;
+    // Last trick = every ACTIVE player's hand is empty. (The sitting
+    // partner's hand never empties, so it must be excluded — otherwise a
+    // sit-out hand would never end.)
+    const lastTrick = state.players.every((p, i) => i === state.sitOut || p.hand.length === 0);
     msg(`🏆 ${state.players[winner].name} won the trick. ${lastTrick ? "That was the last one." : ""}`);
     const panel = $("panel"); panel.innerHTML = "";
     const btn = document.createElement("button"); btn.type = "button";
@@ -587,6 +768,18 @@ if (typeof document !== "undefined") {
     render();
   }
   function playHumanCard(card) {
+    // Exchange taps: the human either commits a return card (blind — the
+    // partner's gift is revealed only after this choice) or picks a gift
+    // card for a bot bidder who asked them.
+    if (state.phase === "exchange-return" && state.exchange) {
+      state.exchange.ret = card;
+      completeExchange(state.exchange.gift);
+      return;
+    }
+    if (state.phase === "exchange-gift" && state.exchange) {
+      completeExchange(card);
+      return;
+    }
     if (state.phase !== "play" || state.turn !== 0) return;
     doPlay(0, card);
   }
@@ -594,13 +787,16 @@ if (typeof document !== "undefined") {
     const p = state.players[i];
     p.hand = p.hand.filter(c => c !== card);
     state.plays.push({ player: i, card });
-    if (state.plays.length === 4) {
+    if (state.plays.length === trickSize()) {
       const winner = trickWinner(state.plays, state.trump);
       state.players[winner].tricks++;
       state.leader = winner;
       pauseAfterTrick(winner);
     } else {
-      state.turn = (i + 1) % 4; render(); nextPlay();
+      // Advance, skipping the sitting partner's seat entirely.
+      let nt = (i + 1) % 4;
+      if (nt === state.sitOut) nt = (nt + 1) % 4;
+      state.turn = nt; render(); nextPlay();
     }
     render();
   }
@@ -643,7 +839,7 @@ if (typeof document !== "undefined") {
     applyVariant(v, true);
     state.players = NAMES.map(name => ({ name, score: 0, tricks: 0, hand: [] }));
     state.dealer = 0; state.phase = "idle"; state.trump = null; state.plays = []; state.trickWinner = -1;
-    state.bid = BIDS[0]; state.bidder = -1; state.bids = [];
+    state.bid = BIDS[0]; state.bidder = -1; state.bids = []; state.sitOut = -1; state.exchange = null;
     handDrag = null;
     $("panel").innerHTML = ""; $("hand").innerHTML = "";
     showMainBtn(); $("main-btn").textContent = "Deal"; mainBtnMode = "new";
@@ -661,4 +857,4 @@ if (typeof document !== "undefined") {
   render();
 }
 
-if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, botBid, botPlay };
+if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, botBid, botPlay, isColdHand, exchangeSkeleton, shouldAskExchange, exchangeReturnCard, exchangeGiftCard, exchangeCards };

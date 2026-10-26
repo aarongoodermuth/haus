@@ -270,11 +270,19 @@ function botBid(hand, currentBid, opts = {}) {
   // tricks: keep the best 6 of 9) and the estimate running low in
   // 3-player play (+0.4: with only 2 opponents, winners are safer and
   // trump is more dominant than the 4-player-tuned estimate assumes).
-  // The old 0.5 bonus left dealers under for 4 in 95% of deals and made
-  // bid 5 a 88% shot — far too conservative.
+  // The naming premium is 0.5 with a kitty (bid 5 from eff 4.5 up), not
+  // the 0.25 used elsewhere: forced-bid measurement under trump-clearing
+  // showed eff [4.5,4.75) hands make 69% when they bid 5, and [4.25,4.5)
+  // hands still make 63% — so 4.5 is the aggressive-but-sound line (the
+  // old 4.75 line left dealers under for 4 in ~68% of deals).
   const eff = est + (opts.teams ? 1.5 : 0) + (opts.kitty ? 1.3 : 0);
-  const want = Math.floor(eff + 0.25);
-  const bid = BIDS.find(b => b.id === String(want));
+  const want = Math.floor(eff + (opts.kitty ? 0.5 : 0.25));
+  let bid = BIDS.find(b => b.id === String(want));
+  // Kitty only: the measured aggression is the bid-5 line (4.5, not 4.75).
+  // Bid 6 keeps its old 5.75 line, so hands in [5.5,5.75) still bid 5 —
+  // they make bid 5 ~99% of the time under trump-clearing, and bidding 6
+  // with them would trade that near-certainty for a much weaker 6.
+  if (opts.kitty && want === 6 && eff < 5.75) bid = BIDS.find(b => b.id === "5");
   if (bid && bid.amount > currentBid.amount) return bid;
   return BIDS[0];
 }
@@ -323,16 +331,23 @@ function discardCard(hand, trump, legal) {
 }
 function botPlay(hand, trump, plays, ctx = {}) {
   // ctx (from the UI; optional in tests): { self, bidder, bidderLive, bidId,
-  // partner, teams }. bidderLive = the bidder (or, in teams, the bidder's
-  // team) can still make the bid, so winning matters more than saving
-  // trump. In solo play everyone scores alone; in teams, partner logic
-  // applies (see the duck rule below).
+  // partner, teams, clearTrumpFirst }. bidderLive = the bidder (or, in
+  // teams, the bidder's team) can still make the bid, so winning matters
+  // more than saving trump. In solo play everyone scores alone; in teams,
+  // partner logic applies (see the duck rule below).
   const ledCard = plays.length ? plays[0].card : null;
   // Sweeping = the Haus bidder (or, in teams, their partner too) is going
   // for Haus and the bid is still alive: lead trump first so the off-suit
   // aces can't be trumped (see leadCard).
-  const sweeping = ctx.bidderLive && ctx.bidId === "haus" &&
-    (ctx.teams ? teamOf(ctx.self) === teamOf(ctx.bidder) : ctx.self === ctx.bidder);
+  // clearTrumpFirst generalizes that sweep: a leader holding a side Ace
+  // AND trump leads trump first instead of the Ace, so the Ace can't be
+  // trumped later. It is an experiment flag (default off) until the A/B
+  // measurement shows whether it helps or hurts.
+  const clearing = !!ctx.clearTrumpFirst &&
+    hand.some(c => c.value === 5 && !isTrump(c, trump)) &&
+    hand.some(c => isTrump(c, trump));
+  const sweeping = (ctx.bidderLive && ctx.bidId === "haus" &&
+    (ctx.teams ? teamOf(ctx.self) === teamOf(ctx.bidder) : ctx.self === ctx.bidder)) || clearing;
   if (!ledCard) return leadCard(hand, trump, sweeping);
   const legal = legalCards(hand, trump, ledCard);
   const led = effectiveSuit(ledCard, trump);
@@ -510,6 +525,21 @@ if (typeof document !== "undefined") {
       attachHandCard(el, c, playable && legal.includes(c));
       handEl.appendChild(el);
     });
+    sizeHand();
+  }
+  // Size the human hand row from its measured width so it never wraps:
+  // 6 cards, or 9 with the kitty, always on one line. Runs on every render
+  // (hands change size at deal / kitty / discard / play) and on resize
+  // (folding a phone changes the width mid-game).
+  function sizeHand() {
+    const handEl = $("hand"); if (!handEl || !handEl.clientWidth) return;
+    const me = state.players[0]; if (!me || !me.hand.length) return;
+    const s = handCardSize(handEl.clientWidth, me.hand.length);
+    const setVar = (k, v) => { if (handEl.style.setProperty) handEl.style.setProperty(k, v); else handEl.style[k] = v; };
+    setVar("--hand-card-w", s.w + "px");
+    setVar("--hand-card-h", s.h + "px");
+    setVar("--hand-card-f", s.font + "rem");
+    setVar("--hand-card-p", s.pad + "px");
   }
   // Drag-to-reorder for the player's hand, built on Pointer Events so mouse
   // and touch share one path. A press that barely moves is a tap (plays the
@@ -587,6 +617,7 @@ if (typeof document !== "undefined") {
   // Long-press on a card must not pop a context menu mid-drag.
   $("hand").addEventListener("contextmenu", e => { if (e.preventDefault) e.preventDefault(); });
   function newGame() {
+    hideGameOverOverlay();
     state.players = roster().map(name => ({ name, score: 0, tricks: 0, hand: [] }));
     state.dealer = Math.floor(Math.random() * playerCount());
     startHand();
@@ -778,8 +809,11 @@ if (typeof document !== "undefined") {
   // The bidder adds the 3 kitty cards (9 in hand), then sheds 3, keeping 6.
   function beginKitty() {
     const bidder = state.bidder, bp = state.players[bidder];
-    bp.hand = bp.hand.concat(state.kitty);
-    bp.hand.sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value);
+    // Kitty cards join the RIGHT end of the hand, sorted among themselves
+    // so the group still reads tidily — they are not interleaved with the
+    // dealt cards.
+    const kitty = state.kitty.slice().sort((a, b) => a.suit.localeCompare(b.suit) || b.value - a.value);
+    bp.hand = bp.hand.concat(kitty);
     state.kitty = [];
     if (bidder === 0) {
       state.phase = "discard"; state.discardSel = [];
@@ -828,6 +862,10 @@ if (typeof document !== "undefined") {
         partner: teams ? (state.turn + 2) % 4 : null,
         teams,
         playersInTrick: trickSize(),
+        // Trump-clearing is on for every variant: measured in 3P (Ace
+        // trumped-rate 42% -> 16%, bid-5 makes 77% -> 85%, bid-6 41% -> 86%)
+        // and in 4P solo (bid-4 makes 84% -> 98%, Ace trumped 48% -> 25%).
+        clearTrumpFirst: true,
       });
       doPlay(state.turn, card);
     }, 550);
@@ -917,6 +955,67 @@ if (typeof document !== "undefined") {
     $("main-btn").textContent = winner ? "New Game" : "Next Hand";
     mainBtnMode = winner ? "new" : "next";
     state.phase = "idle"; render();
+    if (winner) showGameOver(top);
+  }
+  // Game-over announcement: your win gets fireworks; someone else's win
+  // gets a trophy moment instead — no fireworks, but unmistakably more
+  // than text on the screen, so you can't miss that the game is over.
+  function showGameOver(top) {
+    const winnerIdx = state.players.indexOf(top);
+    const humanWon = variant === "teams" ? teamOf(winnerIdx) === teamOf(0) : winnerIdx === 0;
+    const scoresText = variant === "teams"
+      ? `${teamNames[0]} ${state.players[0].score} · ${teamNames[1]} ${state.players[1].score}`
+      : state.players.map(p => `${p.name} ${p.score}`).join(" · ");
+    const title = humanWon
+      ? (variant === "teams" ? "YOUR TEAM WINS!" : "YOU WIN!")
+      : (variant === "teams" ? `${teamNames[teamOf(winnerIdx)]} win the game!` : `${top.name} wins the game!`);
+    const sub = humanWon
+      ? (variant === "teams" ? `${teamNames[0]} win the game with ${top.score} points!` : `You win the game with ${top.score} points!`)
+      : (variant === "teams" ? `${teamNames[teamOf(winnerIdx)]} finish with ${top.score} points.` : `${top.name} finishes with ${top.score} points.`);
+    showGameOverOverlay(humanWon ? "win" : "lose", title, sub, scoresText);
+  }
+  function showGameOverOverlay(mode, title, sub, scoresText) {
+    let ov = document.getElementById("game-over-overlay");
+    if (!ov) {
+      ov = document.createElement("div");
+      ov.id = "game-over-overlay";
+      if (document.body) document.body.appendChild(ov);
+    }
+    ov.className = mode; // "win" or "lose"
+    ov.style.display = "flex";
+    ov.innerHTML = "";
+    if (mode === "win") {
+      const emojis = ["🎆", "🎇", "✨", "🎉", "💥"];
+      for (let i = 0; i < 24; i++) {
+        const f = document.createElement("span");
+        f.className = "firework";
+        f.textContent = emojis[i % emojis.length];
+        f.style.left = (5 + Math.random() * 90) + "%";
+        f.style.top = (10 + Math.random() * 60) + "%";
+        f.style.fontSize = (1.5 + Math.random()) + "rem";
+        f.style.animationDelay = (Math.random() * 2) + "s";
+        f.style.animationDuration = (2 + Math.random() * 1.5) + "s";
+        ov.appendChild(f);
+      }
+    } else {
+      const t = document.createElement("div");
+      t.className = "trophy";
+      t.textContent = "🏆";
+      ov.appendChild(t);
+    }
+    const h = document.createElement("h1"); h.className = "go-title"; h.textContent = title; ov.appendChild(h);
+    const s = document.createElement("p"); s.className = "go-sub"; s.textContent = sub; ov.appendChild(s);
+    const sc = document.createElement("p"); sc.className = "go-scores"; sc.textContent = scoresText; ov.appendChild(sc);
+    const btns = document.createElement("div"); btns.className = "go-buttons";
+    const again = document.createElement("button"); again.type = "button"; again.textContent = "Play again";
+    again.addEventListener("click", () => { hideGameOverOverlay(); newGame(); });
+    const close = document.createElement("button"); close.type = "button"; close.className = "go-secondary"; close.textContent = "Close";
+    close.addEventListener("click", () => { hideGameOverOverlay(); });
+    btns.appendChild(again); btns.appendChild(close); ov.appendChild(btns);
+  }
+  function hideGameOverOverlay() {
+    const ov = document.getElementById("game-over-overlay");
+    if (ov) ov.style.display = "none";
   }
   // Variant switch: Solo vs Teams (2v2). Switching resets to a fresh idle
   // game (scores cleared, Deal button up) — a hand in progress is discarded.
@@ -946,6 +1045,7 @@ if (typeof document !== "undefined") {
     state.kitty = []; state.discardSel = [];
     handDrag = null;
     $("panel").innerHTML = ""; $("hand").innerHTML = "";
+    hideGameOverOverlay();
     showMainBtn(); $("main-btn").textContent = "Deal"; mainBtnMode = "new";
     msg(v === "teams" ? "Teams (2v2) — Karen is your partner across the table. Tap Deal to start."
       : v === "three" ? "Three player — 21 cards and a 3-card kitty. Tap Deal to start."
@@ -960,8 +1060,25 @@ if (typeof document !== "undefined") {
     const saved = localStorage.getItem("haus-variant");
     applyVariant(saved === "teams" || saved === "solo" || saved === "three" ? saved : "solo", false);
   } catch (_) { applyVariant("solo", false); }
+  // Folding/unfolding a phone changes the width mid-game: re-size the hand
+  // row instead of letting it wrap. Guarded: the stub test env has no window.
+  if (typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", sizeHand);
   state.players = roster().map(name => ({ name, score: 0, tricks: 0, hand: [] }));
   render();
 }
 
-if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, buildDeckThree, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, estimateSuit, botBid, botPlay, isColdHand, exchangeSkeleton, shouldAskExchange, exchangeReturnCard, exchangeGiftCard, exchangeCards, kittyDiscards };
+// Pure helper (exported for tests): the human hand must NEVER wrap —
+// 6 cards normally, 9 with the kitty, at any screen width. So the row is
+// sized from its measured width: cards shrink to fit exactly, capped at
+// the standard 66px, with the font scaled so the widest label ("10♣")
+// stays inside the card. Padding drops from 4 to 2 below 60px so narrow
+// cards keep their label.
+function handCardSize(avail, n) {
+  const gap = 8, maxW = 66;
+  if (n <= 0 || avail <= 0) return { w: maxW, h: 90, font: 1.6, pad: 4 };
+  const w = Math.min(maxW, Math.floor((avail - (n - 1) * gap) / n));
+  const pad = w >= 60 ? 4 : 2;
+  const font = w >= 66 ? 1.6 : Math.max(0.3, Math.round(((w - 12) / 34) * 100) / 100);
+  return { w, h: Math.round(w * 90 / 66), font, pad };
+}
+if (typeof module !== "undefined") module.exports = { SUITS, VALUES, BIDS, WIN_SCORE, buildDeck, buildDeckThree, shuffle, isTrump, isLeftBower, isRightBower, effectiveSuit, legalCards, trickWinner, cardStrength, scoreHand, scoreTeams, teamOf, estimateBid, estimateSuit, botBid, botPlay, isColdHand, exchangeSkeleton, shouldAskExchange, exchangeReturnCard, exchangeGiftCard, exchangeCards, kittyDiscards, handCardSize };

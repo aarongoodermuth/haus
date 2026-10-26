@@ -168,17 +168,24 @@ except the 9 of hearts. Each player is dealt 6 cards and the remaining
   the kitty (9 cards in hand), then discards 3 cards that are not
   played, leaving 6 — and only then does play begin. The kitty is
   shown face down in the middle until taken (face up on the debug
-  site).
+  site). Kitty cards join the right end of the hand, sorted among
+  themselves — they are not interleaved with the dealt cards. The hand
+  row never wraps: cards shrink to fit one row, 6 or 9, at any screen
+  width.
 - **Bot play:** bots bid with a kitty bonus of 1.3 tricks — measured over
   5000 simulated hands, where actual tricks with the kitty fit
   1.32 + 1.01 × estimate. That bundles the kitty itself (+0.9 tricks:
   keep the best 6 of 9) and the estimate running low in 3-player play
   (+0.4: with only 2 opponents, winners are safer and trump is more
-  dominant). The original 0.5 guess left dealers under for 4 in 95% of
-  deals; with 1.3, bid 5 appears in 28% of deals and makes 77%, and bid
-  6 appears with a ~46% make rate. Bots discard their 3 weakest cards
-  — trump kept over off-suit cards, bars kept over low trump, and
-  singletons shed first to open voids.
+  dominant). The naming premium with a kitty is 0.5, so bid 5 starts at
+  eff 4.5 (bid 6 keeps its 5.75 line): forced-bid measurement showed
+  eff [4.5,4.75) hands make 69% when they bid 5. Bots also clear trump
+  before leading a side Ace when they hold trump (all variants, not
+  just 3P): measured in 3P, led Aces were trumped 42% of the time
+  before clearing and 16% after; bid-5 makes rose 77% → 85% and bid-6
+  41% → 86%; in 4P solo, bid-4 makes rose 84% → 98%. Bots discard
+  their 3 weakest cards — trump kept over off-suit cards, bars kept
+  over low trump, and singletons shed first to open voids.
 
 ## Sources
 

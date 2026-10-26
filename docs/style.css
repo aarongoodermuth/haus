@@ -21,7 +21,10 @@ main { max-width:640px; margin:0 auto; padding:8px 12px 32px; }
 #panel button:disabled { opacity:.4; }
 #main-btn { display:block; margin:12px auto; }
 #hand-wrap h2 { font-size:1.1rem; margin:10px 0 6px; }
-#hand { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+#hand { display:flex; flex-wrap:nowrap; gap:8px; justify-content:center; }
+/* The hand row never wraps: game.js sizes these from the measured row width
+   (6 cards, or 9 with the kitty) so the row always fits on one line. */
+#hand .card { width:var(--hand-card-w, 66px); height:var(--hand-card-h, 90px); font-size:var(--hand-card-f, 1.6rem); padding:var(--hand-card-p, 4px); }
 .card { width:66px; height:90px; background:var(--card); color:var(--ink); border-radius:10px; border:2px solid transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; line-height:1.05; padding:4px; user-select:none; }
 .card.red { color:var(--red); }
 .card.small { width:54px; height:74px; font-size:1.25rem; }
@@ -52,6 +55,23 @@ button.card:not(:disabled):active { transform:translateY(-4px); }
 #message { text-align:center; min-height:1.4em; font-size:1.1rem; }
 .rules-link { text-align:center; font-size:.9rem; opacity:.8; }
 .rules-link a { color:#fde68a; }
-/* Narrow phones: cards shrink a little to keep 5 in a row, but the rank
-   text must shrink with them — a 1.6rem "10♣" does not fit a 52px card. */
-@media (max-width:380px){ .card{width:60px;height:84px;font-size:1.4rem} }
+/* No narrow-phone card rule: the hand row is sized in code (see #hand
+   .card above), which supersedes the old ≤380px rule that shrank cards
+   without shrinking their text. */
+
+/* Game-over overlay: your win gets fireworks; someone else's win gets a
+   trophy moment instead — no fireworks, but unmistakably more than text. */
+#game-over-overlay { position:fixed; inset:0; z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:24px; text-align:center; background:rgba(0,0,0,.72); color:#fff; }
+#game-over-overlay.lose { background:rgba(0,0,0,.85); }
+#game-over-overlay .go-title { font-size:2.4rem; font-weight:800; margin:0; }
+#game-over-overlay .go-sub { font-size:1.2rem; margin:0; }
+#game-over-overlay .go-scores { font-size:1rem; opacity:.85; margin:0; }
+#game-over-overlay .go-buttons { display:flex; gap:10px; margin-top:8px; }
+#game-over-overlay button { font-size:1.15rem; padding:12px 20px; border-radius:10px; border:2px solid #f59e0b; background:#f59e0b; color:#111; font-weight:700; }
+#game-over-overlay button.go-secondary { background:transparent; color:#fff; border-color:#fff; }
+#game-over-overlay .firework { position:absolute; animation:firework-rise 2.8s ease-out infinite; pointer-events:none; }
+@keyframes firework-rise { 0% { transform:translateY(30px) scale(.4); opacity:0 } 25% { opacity:1 } 100% { transform:translateY(-140px) scale(1.15); opacity:0 } }
+#game-over-overlay .trophy { font-size:4rem; animation:trophy-in .8s ease-out, trophy-pulse 2s ease-in-out 1s infinite; }
+@keyframes trophy-in { from { transform:scale(.3); opacity:0 } to { transform:scale(1); opacity:1 } }
+@keyframes trophy-pulse { 0%,100% { transform:scale(1) } 50% { transform:scale(1.06) } }
+@media (prefers-reduced-motion: reduce) { #game-over-overlay .firework, #game-over-overlay .trophy { animation:none; } }

@@ -1,4 +1,6 @@
 // Haus service worker — build 2026-10-23.30.
+// Retrigger 2026-11-06: force a fresh Pages deploy after run #33 wedged
+// in deployment_queued (icons never deployed). No functional change.
 // Offline-first for the game itself: the first online visit caches every
 // file the game needs, and later visits work with no internet at all.
 // Bump CACHE (and the ?v= tokens in index.html) on every deploy, so an

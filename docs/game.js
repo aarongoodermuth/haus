@@ -319,14 +319,19 @@ function leadCard(hand, trump, sweep = false) {
   const suitCards = bySuit[suits[0]];
   return suitCards.reduce((best, c) => c.value > best.value ? c : best, suitCards[0]);
 }
-function discardCard(hand, trump, legal) {
+function discardCard(hand, trump, legal, led) {
   // Shedding (void in the led suit, no win available): lose as little as
   // possible. Never throw away trump while a non-trump card exists; among
   // equals, shed from a singleton suit to open a void for later trumping.
+  // Order by card STRENGTH, not printed value: the bars are Jacks
+  // (value 2) but outrank the trump Ace, so sorting by value shed a bar —
+  // the bot's highest trump — while a King or Queen sat in hand (seen
+  // 2026-11-07: a bot answered a led right bar with its left bar instead
+  // of its K♣). Strength puts the bars above the Ace where they belong.
   const suitCount = c => hand.filter(x => x.suit === c.suit).length;
   return legal.slice().sort((a, b) =>
     (isTrump(a, trump) - isTrump(b, trump)) ||
-    a.value - b.value ||
+    cardStrength(a, trump, led) - cardStrength(b, trump, led) ||
     suitCount(a) - suitCount(b))[0];
 }
 function botPlay(hand, trump, plays, ctx = {}) {
@@ -363,7 +368,7 @@ function botPlay(hand, trump, plays, ctx = {}) {
   // it as cheaply as possible.
   if (ctx.teams && ctx.partner != null && currentWinner.player === ctx.partner) {
     const safe = legal.filter(c => cardStrength(c, trump, led) <= currentBest);
-    if (safe.length) return discardCard(hand, trump, safe);
+    if (safe.length) return discardCard(hand, trump, safe, led);
   }
   if (winning.length) {
     const cheapest = winning[0];
@@ -379,11 +384,11 @@ function botPlay(hand, trump, plays, ctx = {}) {
   const lastToAct = plays.length === (ctx.playersInTrick || 4) - 1;
     const deniesBidder = ctx.bidder != null && currentWinner.player === ctx.bidder && ctx.self !== ctx.bidder;
     if (!canShed || lastToAct || deniesBidder || ctx.bidderLive) return cheapest;
-    return discardCard(hand, trump, legal);
+    return discardCard(hand, trump, legal, led);
   }
   // Can't win this trick: lose as cheaply as possible (discardCard picks the
   // lowest legal card, which is the lowest of the led suit when following).
-  return discardCard(hand, trump, legal);
+  return discardCard(hand, trump, legal, led);
 }
 
 /* ---------------- Browser UI (skipped in Node tests) ---------------- */

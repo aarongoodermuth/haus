@@ -1,16 +1,16 @@
-// Haus service worker — build 2026-10-23.30.
+// Haus service worker — build 2026-10-23.31.
 // Retrigger 2026-11-06: force a fresh Pages deploy after run #33 wedged
 // in deployment_queued (icons never deployed). No functional change.
 // Offline-first for the game itself: the first online visit caches every
 // file the game needs, and later visits work with no internet at all.
 // Bump CACHE (and the ?v= tokens in index.html) on every deploy, so an
 // updated worker replaces the old cache instead of serving stale files.
-const CACHE = "haus-20261023-30";
+const CACHE = "haus-20261023-31";
 const CORE = [
   "./",
   "index.html",
-  "style.css?v=20261023-30",
-  "game.js?v=20261023-30",
+  "style.css?v=20261023-31",
+  "game.js?v=20261023-31",
   "manifest.webmanifest",
   "icon-192.png",
   "icon-512.png",
